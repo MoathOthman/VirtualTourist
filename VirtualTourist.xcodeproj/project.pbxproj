@@ -28,6 +28,7 @@
 		EC14D2241B96F623008B42E8 /* Crashlytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC14D2221B96F623008B42E8 /* Crashlytics.framework */; };
 		EC14D2911B9A4500008B42E8 /* VLTPhotoCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC14D2901B9A4500008B42E8 /* VLTPhotoCollectionViewCell.swift */; };
 		EC14D2931B9A463F008B42E8 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC14D2921B9A463F008B42E8 /* ImageCache.swift */; };
+		ECCAD7AD1BA8461A00B501AF /* VLTPhotosFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCAD7AC1BA8461A00B501AF /* VLTPhotosFetcher.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +68,7 @@
 		EC14D2901B9A4500008B42E8 /* VLTPhotoCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VLTPhotoCollectionViewCell.swift; sourceTree = "<group>"; };
 		EC14D2921B9A463F008B42E8 /* ImageCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		EC14D2941B9C22D7008B42E8 /* MyPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = MyPlayground.playground; sourceTree = "<group>"; };
+		ECCAD7AC1BA8461A00B501AF /* VLTPhotosFetcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VLTPhotosFetcher.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +123,7 @@
 				EC0217441B8C9726005C8084 /* PhotosViewController.swift */,
 				EC14D2901B9A4500008B42E8 /* VLTPhotoCollectionViewCell.swift */,
 				EC0835541BA18F6A00C809D8 /* MapViewZoom.swift */,
+				ECCAD7AB1BA845DD00B501AF /* Utility */,
 				EC14D2111B948DFA008B42E8 /* Models */,
 				EC02174E1B8F4A8A005C8084 /* DataBase */,
 				EC0217461B8C9792005C8084 /* Flicker API */,
@@ -186,6 +189,14 @@
 			name = Models;
 			sourceTree = "<group>";
 		};
+		ECCAD7AB1BA845DD00B501AF /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				ECCAD7AC1BA8461A00B501AF /* VLTPhotosFetcher.swift */,
+			);
+			name = Utility;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -237,6 +248,7 @@
 				TargetAttributes = {
 					EC0217191B8C8A8B005C8084 = {
 						CreatedOnToolsVersion = 6.4;
+						DevelopmentTeam = 8UPFK2A3SH;
 					};
 					EC0217311B8C8A8C005C8084 = {
 						CreatedOnToolsVersion = 6.4;
@@ -304,6 +316,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ECCAD7AD1BA8461A00B501AF /* VLTPhotosFetcher.swift in Sources */,
 				EC02174D1B8F4A83005C8084 /* VLTFlickerConvienience.swift in Sources */,
 				EC0217501B8F4AAC005C8084 /* CoreDataStackManager.swift in Sources */,
 				EC0835531BA175DC00C809D8 /* Map.swift in Sources */,
@@ -444,6 +457,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer: Moath Othman (VS63G5U54F)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -458,6 +472,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer: Moath Othman (VS63G5U54F)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",

@@ -72,4 +72,10 @@ class ImageCache {
         
         return fullURL.path!
     }
+    func removeImageWithIdentifier(identifier: String) {
+        let path = pathForIdentifier(identifier)
+        if NSFileManager.defaultManager().fileExistsAtPath(path) {
+            NSFileManager.defaultManager().removeItemAtPath(path, error: nil)
+        }
+    }
 }

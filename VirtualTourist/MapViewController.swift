@@ -103,7 +103,9 @@ class MapViewController: UIViewController,MKMapViewDelegate {
     func addAnnotationInDB(annotation: MKPointAnnotation) {
        var pin = Pin(dictionary: ["lat":annotation.coordinate.latitude,"lon":annotation.coordinate.longitude], context: self.sharedContext)
         _pins.append(pin)
+
         CoreDataStackManager.sharedInstance().saveContext()
+        VLTPhotosFetcher.fetchPhotosForPin(pin, context: sharedContext)
     }
 
     func handleLongPress(getstureRecognizer : UIGestureRecognizer){

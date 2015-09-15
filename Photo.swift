@@ -32,9 +32,7 @@ class Photo: NSManagedObject {
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
 
         let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
-
         super.init(entity: entity,insertIntoManagedObjectContext: context)
-
         title = dictionary[Keys.Title] as! String
         id = dictionary[Keys.ID] as! String
         url_m = (dictionary[Keys.ImagePath] as? String)!

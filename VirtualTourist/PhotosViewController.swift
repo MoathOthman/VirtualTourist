@@ -9,6 +9,9 @@
 import UIKit
 import MapKit
 import CoreData
+let NO_PIN_IMAGES = "This pin has no images"
+let DELETE_SELECTED_PHOTOS = "Remove Selected Pictures"
+let NEW_COLLECTION = "New Collection"
 
 class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionViewDataSource,UICollectionViewDelegate, NSFetchedResultsControllerDelegate, UICollectionViewDelegateFlowLayout {
     var currentannotation:MKAnnotation?
@@ -22,6 +25,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var bottomActionbarButton: UIBarButtonItem!
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var noteLabel: UILabel!
 
     //MARK: View LifeCycle
     override func viewDidLoad() {
@@ -29,10 +33,16 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
         mapView.addAnnotation(currentannotation)
         if currentPin?.photos.count > 0 {
             //get from db
+            self.bottomActionbarButton.enabled = true
         } else {
-            callAPIAndSaveToDB()
-
+            //case: when downloading images already done with no images
+            if currentPin?.isPhotosDownloaded == true {
+                noteLabel.hidden = false
+            }
         }
+
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("photosHaveBeenFetched:"), name: FETCHING_PHOTOS_FOR_PIN, object: nil)
+
         collectionView.allowsMultipleSelection = true
 
         // Step 2: Perform the fetch
@@ -41,10 +51,28 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
         // Step 6: Set the delegate to this view controller
         fetchedResultsController.delegate = self
 
+        // back button
+        var backbutton = UIBarButtonItem()
+        backbutton.title = "OK"
+        self.navigationController?.navigationBar.topItem?.backBarButtonItem = backbutton
+
     }
     override func viewDidAppear(animated: Bool) {
         let clocation = CLLocation(latitude: currentannotation!.coordinate.latitude, longitude: currentannotation!.coordinate.longitude)
         centerMapOnLocation(clocation)
+    }
+    func photosHaveBeenFetched(notification: NSNotification) {
+        let object: AnyObject?  = notification.object
+        let err: Int? = object?.valueForKey("error") as? Int
+        let finished = object?.valueForKey("finished") as? Int
+
+        if let erro = err where erro == 1 && finished == 1 {
+            noteLabel.hidden = false
+        } else {
+            noteLabel.hidden = true
+        }
+        self.bottomActionbarButton.enabled = true
+
     }
 
     lazy var fetchedResultsController: NSFetchedResultsController = {
@@ -63,38 +91,37 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
 
         }()
 
-    func callAPIAndSaveToDB() {
-        VLTFlickerClient.sharedInstance().getphotosOfLocation(currentPin!.lat.floatValue, longitude: currentPin!.lon.floatValue) { (response, error) -> Void in
-            // Handle the error case
-            if let error = error {
-                println("Error searching for actors: \(error.localizedDescription)")
-                return
-            }
-
-            // Get a Swift dictionary from the JSON data
-            if let photos = response  as? [[String : AnyObject]] {
-                 // Create an array of Person instances from the JSON dictionaries
-                self.photos = photos.map() {
-                    Photo(dictionary: $0, context: self.sharedContext)
-                }
-                self.currentPin!.photos = NSSet(array: self.photos)
-               }
-            
-        }
-    }
-
-
+    //MARK: New Collection button
     @IBAction func bottomBarButtonTapped(sender: UIBarButtonItem) {
         if isThereAnySelectedPhoto() {
             deleteCells(UIButton())
         } else {
             //Delete all photos and cells
-            for i  in 0...19  {
-                self.sharedContext.deleteObject(fetchedResultsController.objectAtIndexPath(NSIndexPath(forRow: i, inSection: 0)) as! Photo)
-            }
-            CoreDataStackManager.sharedInstance().saveContext()
-            callAPIAndSaveToDB()
+            deleteAllPhotos()
+            self.bottomActionbarButton.enabled = false
+            VLTPhotosFetcher.fetchPhotosForPin(self.currentPin!, context: sharedContext)
         }
+    }
+    func deleteAllPhotos() {
+        //FIXME: Should not be fixed number
+        let count = countOfEntities()
+        if count == 0 {return}
+        for i  in 0...countOfEntities()-1 {
+            let photo = fetchedResultsController.objectAtIndexPath(NSIndexPath(forRow: i, inSection: 0)) as! Photo
+            deletePhoto(photo)
+        }
+        CoreDataStackManager.sharedInstance().saveContext()
+    }
+    func deletePhoto(_photo: Photo) {
+        self.sharedContext.deleteObject(_photo)
+        ImageCache.sharedInstance().removeImageWithIdentifier(_photo.url_m.lastPathComponent)
+    }
+    func countOfEntities() -> Int {
+        let context = sharedContext
+        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.currentPin!);
+        let count = context.countForFetchRequest(fetchRequest, error: nil)
+        return count
     }
     func centerMapOnLocation(location: CLLocation) {
         let regionRadius: CLLocationDistance = 10000
@@ -149,14 +176,18 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
     }
     func configureCell(cell: VLTPhotoCollectionViewCell, photo: Photo) {
         var imageView = cell.contentView.viewWithTag(1) as! UIImageView
+        var animator = cell.contentView.viewWithTag(3) as! UIActivityIndicatorView
 
         var pinImage = UIImage(named: "posterPlaceHoldr")
 
         if  photo.url_m == "" {
             pinImage = UIImage(named: "noImage")
+            animator.stopAnimating()
         } else if photo.image != nil {
             pinImage = photo.image
+            animator.stopAnimating()
         } else {
+            animator.startAnimating()
           let task =  VLTFlickerClient.sharedInstance().taskForImageWithURL(photo.url_m, completionHandler: { (imageData, error) -> Void in
             if let error = error {
                 println("Poster download error: \(error.localizedDescription)")
@@ -168,6 +199,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
                 photo.image = image
                  dispatch_async(dispatch_get_main_queue()) {
                      imageView.image = image
+                     animator.stopAnimating()
                 }
             }
 
@@ -183,7 +215,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
     //MARK: CollectionView Delegate
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
          highlightCell(indexPath, flag: !checkIfPhotoIsAlreadySelected(indexPath))
-        bottomActionbarButton.title = "Delete Selected Photos"
+         bottomActionbarButton.title = DELETE_SELECTED_PHOTOS
     }
     func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
         highlightCell(indexPath, flag: !checkIfPhotoIsAlreadySelected(indexPath))
@@ -236,13 +268,12 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
         // fruits for section
         let sectionfruits = indicesSelected[item as! NSIndexPath]
         deletedPhotos.append(sectionfruits!)
-            sharedContext.deleteObject(indicesSelected[item as! NSIndexPath]!)
-            CoreDataStackManager.sharedInstance().saveContext()
-            indicesSelected.removeValueForKey(item as! NSIndexPath)
+        deletePhoto(indicesSelected[item as! NSIndexPath]!)
+        indicesSelected.removeValueForKey(item as! NSIndexPath)
 
         }
+            bottomActionbarButton.title = NEW_COLLECTION
 
-        collectionView?.deleteItemsAtIndexPaths(indexpaths)
         }
     }
 

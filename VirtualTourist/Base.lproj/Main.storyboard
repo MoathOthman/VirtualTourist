@@ -129,7 +129,7 @@
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="NZa-Rb-eAh"/>
                                 </items>
                             </toolbar>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="This pin has no images." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AWU-vP-b90">
+                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="This pin has no images." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AWU-vP-b90">
                                 <rect key="frame" x="173" y="318" width="254" height="42"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="254" id="OwF-u3-Gsc"/>
@@ -156,6 +156,10 @@
                                             <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
+                                                <activityIndicatorView opaque="NO" tag="3" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="mkW-KR-wnQ">
+                                                    <rect key="frame" x="32" y="32" width="37" height="37"/>
+                                                    <color key="color" red="0.1194037751" green="0.62704128859999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                                </activityIndicatorView>
                                                 <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="OgI-sp-KBF">
                                                     <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
                                                 </imageView>
@@ -166,15 +170,17 @@
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
-                                        <color key="backgroundColor" red="0.92041508839999997" green="0.58125057719999995" blue="0.20468702559999999" alpha="1" colorSpace="calibratedRGB"/>
+                                        <color key="backgroundColor" red="0.85098039219999999" green="0.85098039219999999" blue="0.83529411760000005" alpha="1" colorSpace="calibratedRGB"/>
                                         <constraints>
                                             <constraint firstItem="fHy-IG-ntd" firstAttribute="top" secondItem="Ze6-zh-BcN" secondAttribute="topMargin" constant="-8" id="3UZ-eV-ksK"/>
                                             <constraint firstAttribute="trailingMargin" secondItem="fHy-IG-ntd" secondAttribute="trailing" constant="-8" id="B7L-lk-BAO"/>
                                             <constraint firstAttribute="bottomMargin" secondItem="OgI-sp-KBF" secondAttribute="bottom" constant="-8" id="aSO-LM-5w7"/>
+                                            <constraint firstAttribute="centerY" secondItem="mkW-KR-wnQ" secondAttribute="centerY" id="dGQ-co-HNf"/>
                                             <constraint firstAttribute="bottomMargin" secondItem="fHy-IG-ntd" secondAttribute="bottom" constant="-8" id="kP3-Pl-rlq"/>
                                             <constraint firstItem="fHy-IG-ntd" firstAttribute="leading" secondItem="Ze6-zh-BcN" secondAttribute="leadingMargin" constant="-8" id="uIr-DN-YXZ"/>
                                             <constraint firstAttribute="trailingMargin" secondItem="OgI-sp-KBF" secondAttribute="trailing" constant="-8" id="uPc-ev-Lpv"/>
                                             <constraint firstItem="OgI-sp-KBF" firstAttribute="leading" secondItem="Ze6-zh-BcN" secondAttribute="leadingMargin" constant="-8" id="vdZ-3i-T8H"/>
+                                            <constraint firstAttribute="centerX" secondItem="mkW-KR-wnQ" secondAttribute="centerX" id="whV-uX-TkL"/>
                                             <constraint firstItem="OgI-sp-KBF" firstAttribute="top" secondItem="Ze6-zh-BcN" secondAttribute="topMargin" constant="-8" id="wiE-U3-dUZ"/>
                                         </constraints>
                                     </collectionViewCell>
@@ -206,6 +212,7 @@
                         <outlet property="bottomActionbarButton" destination="2Pc-TP-LtT" id="l8t-4u-guJ"/>
                         <outlet property="collectionView" destination="C07-4S-PZz" id="rr3-4k-uug"/>
                         <outlet property="mapView" destination="wgr-n0-xNB" id="faB-ZL-uap"/>
+                        <outlet property="noteLabel" destination="AWU-vP-b90" id="H0F-pT-FQ2"/>
                         <outlet property="photosAlbumCollectionView" destination="C07-4S-PZz" id="d2R-3i-HmJ"/>
                     </connections>
                 </viewController>
