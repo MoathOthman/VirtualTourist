@@ -97,32 +97,14 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
             deleteCells(UIButton())
         } else {
             //Delete all photos and cells
+//            unHighLighAll()
             deleteAllPhotos()
             self.bottomActionbarButton.enabled = false
             VLTPhotosFetcher.fetchPhotosForPin(self.currentPin!, context: sharedContext)
+            
         }
     }
-    func deleteAllPhotos() {
-        //FIXME: Should not be fixed number
-        let count = countOfEntities()
-        if count == 0 {return}
-        for i  in 0...countOfEntities()-1 {
-            let photo = fetchedResultsController.objectAtIndexPath(NSIndexPath(forRow: i, inSection: 0)) as! Photo
-            deletePhoto(photo)
-        }
-        CoreDataStackManager.sharedInstance().saveContext()
-    }
-    func deletePhoto(_photo: Photo) {
-        self.sharedContext.deleteObject(_photo)
-        ImageCache.sharedInstance().removeImageWithIdentifier(_photo.url_m.lastPathComponent)
-    }
-    func countOfEntities() -> Int {
-        let context = sharedContext
-        let fetchRequest = NSFetchRequest(entityName: "Photo")
-        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.currentPin!);
-        let count = context.countForFetchRequest(fetchRequest, error: nil)
-        return count
-    }
+
     func centerMapOnLocation(location: CLLocation) {
         let regionRadius: CLLocationDistance = 10000
         let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate,
@@ -150,132 +132,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
         return nil
     }
 
-    //MARK:CollectionView Datasource
-
-    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section] as!
-        NSFetchedResultsSectionInfo
-        if sectionInfo.numberOfObjects == 0 {
-            collectionView.backgroundColor = UIColor.clearColor()
-        }else {
-            collectionView.backgroundColor = UIColor.whiteColor()
-        }
-
-        return sectionInfo.numberOfObjects
-
-    }
-    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        let CellIdentifier = "photoCell"
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as! VLTPhotoCollectionViewCell
-        configureCell(cell, photo: photoForIndex(indexPath))
-        return cell
-    }
-
-    func photoForIndex(indexPath: NSIndexPath) -> Photo {
-       return fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
-    }
-    func configureCell(cell: VLTPhotoCollectionViewCell, photo: Photo) {
-        var imageView = cell.contentView.viewWithTag(1) as! UIImageView
-        var animator = cell.contentView.viewWithTag(3) as! UIActivityIndicatorView
-
-        var pinImage = UIImage(named: "posterPlaceHoldr")
-
-        if  photo.url_m == "" {
-            pinImage = UIImage(named: "noImage")
-            animator.stopAnimating()
-        } else if photo.image != nil {
-            pinImage = photo.image
-            animator.stopAnimating()
-        } else {
-            animator.startAnimating()
-          let task =  VLTFlickerClient.sharedInstance().taskForImageWithURL(photo.url_m, completionHandler: { (imageData, error) -> Void in
-            if let error = error {
-                println("Poster download error: \(error.localizedDescription)")
-            }
-
-            if let data = imageData {
-                // Craete the image
-                let image = UIImage(data: data)
-                photo.image = image
-                 dispatch_async(dispatch_get_main_queue()) {
-                     imageView.image = image
-                     animator.stopAnimating()
-                }
-            }
-
-        })
-
-        cell.taskToCancelifCellIsReused = task
-        }
-        imageView.image = pinImage
-    }
-
-
-
-    //MARK: CollectionView Delegate
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-         highlightCell(indexPath, flag: !checkIfPhotoIsAlreadySelected(indexPath))
-         bottomActionbarButton.title = DELETE_SELECTED_PHOTOS
-    }
-    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
-        highlightCell(indexPath, flag: !checkIfPhotoIsAlreadySelected(indexPath))
-    }
-    func collectionView(collectionView: UICollectionView, shouldHighlightItemAtIndexPath indexPath: NSIndexPath) -> Bool {
-        return true
-    }
-
-
-    //MARK: heighlight cells
-    func highlightCell(indexPath : NSIndexPath, flag: Bool) {
-        let cell = collectionView.cellForItemAtIndexPath(indexPath)
-        let coverView: UIView = cell!.contentView.viewWithTag(2)!
-        if flag {
-            coverView.backgroundColor = UIColor(white: 0.8, alpha: 0.9)
-            indicesSelected[indexPath] = self.photoForIndex(indexPath)
-        } else {
-            coverView.backgroundColor = nil
-            indicesSelected.removeValueForKey(indexPath)
-//            indicesSelected.removeAtIndex(indexPath.row)
-        }
-
-    }
-    func checkIfPhotoIsAlreadySelected(indx: NSIndexPath) -> Bool {
-        for foto in indicesSelected.keys {
-            if foto == indx {
-                return true
-            }
-        }
-        return false
-    }
-    func isThereAnySelectedPhoto() -> Bool {
-        if indicesSelected.count > 0 {
-            return true
-        }
-        return false
-    }
-    func deleteCells(sender: AnyObject) {
-
-        var deletedPhotos:[Photo] = []
-
-        let indexpaths = collectionView?.indexPathsForSelectedItems()
-
-        if let indexpaths = indexpaths {
-
-        for item  in indexpaths {
-        let cell = collectionView!.cellForItemAtIndexPath(item as! NSIndexPath)
-
-        collectionView?.deselectItemAtIndexPath(item as? NSIndexPath, animated: true)
-        // fruits for section
-        let sectionfruits = indicesSelected[item as! NSIndexPath]
-        deletedPhotos.append(sectionfruits!)
-        deletePhoto(indicesSelected[item as! NSIndexPath]!)
-        indicesSelected.removeValueForKey(item as! NSIndexPath)
-
-        }
-            bottomActionbarButton.title = NEW_COLLECTION
-
-        }
-    }
+    
 
     deinit {
         // Cancel all block operations when VC deallocates
@@ -308,110 +165,35 @@ extension PhotosViewController {
 
 }
 
-//MARK: FetchController Delegate
+
+//MARK: Utility 
+
 extension PhotosViewController {
-    // MARK: - Fetched Results Controller Delegate
-
-
-    // In the did change object method:
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
-
-        if type == NSFetchedResultsChangeType.Insert {
-            println("Insert Object: \(newIndexPath)")
-
-            blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
-                    if let this = self {
-                        this.collectionView!.insertItemsAtIndexPaths([newIndexPath!])
-                    }
-                    })
-            )
+    func deleteAllPhotos() {
+        //FIXME: Should not be fixed number
+        let count = countOfEntities()
+        if count == 0 {return}
+        for i  in 0...countOfEntities()-1 {
+            let photo = fetchedResultsController.objectAtIndexPath(NSIndexPath(forRow: i, inSection: 0)) as! Photo
+            deletePhoto(photo)
         }
-        else if type == NSFetchedResultsChangeType.Update {
-            println("Update Object: \(indexPath)")
-            blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
-                    if let this = self {
-                        this.collectionView!.reloadItemsAtIndexPaths([indexPath!])
-                    }
-                    })
-            )
-        }
-        else if type == NSFetchedResultsChangeType.Move {
-            println("Move Object: \(indexPath)")
-
-            blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
-                    if let this = self {
-                        this.collectionView!.moveItemAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
-                    }
-                    })
-            )
-        }
-        else if type == NSFetchedResultsChangeType.Delete {
-            println("Delete Object: \(indexPath)")
-
-            blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
-                    if let this = self {
-                        this.collectionView!.deleteItemsAtIndexPaths([indexPath!])
-                    }
-                    })
-            )
-        }
+        CoreDataStackManager.sharedInstance().saveContext()
+    }
+    func deletePhoto(_photo: Photo) {
+        ImageCache.sharedInstance().removeImageWithIdentifier(_photo.url_m.lastPathComponent)
+        self.sharedContext.deleteObject(_photo)
+    }
+    func countOfEntities() -> Int {
+        let context = sharedContext
+        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.currentPin!);
+        let count = context.countForFetchRequest(fetchRequest, error: nil)
+        return count
     }
 
-    // In the did change section method:
-    func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
-
-        if type == NSFetchedResultsChangeType.Insert {
-            println("Insert Section: \(sectionIndex)")
-
-            blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
-                    if let this = self {
-                        this.collectionView!.insertSections(NSIndexSet(index: sectionIndex))
-                    }
-                    })
-            )
-        }
-        else if type == NSFetchedResultsChangeType.Update {
-            println("Update Section: \(sectionIndex)")
-            blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
-                    if let this = self {
-                        this.collectionView!.reloadSections(NSIndexSet(index: sectionIndex))
-                    }
-                    })
-            )
-        }
-        else if type == NSFetchedResultsChangeType.Delete {
-            println("Delete Section: \(sectionIndex)")
-
-            blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
-                    if let this = self {
-                        this.collectionView!.deleteSections(NSIndexSet(index: sectionIndex))
-                    }
-                    })
-            )
-        }
+    func photoForIndex(indexPath: NSIndexPath) -> Photo {
+        return fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
     }
 
-    // And finally, in the did controller did change content method:
-    func controllerDidChangeContent(controller: NSFetchedResultsController) {
-                collectionView!.performBatchUpdates({ () -> Void in
-                    for operation: NSBlockOperation in self.blockOperations {
-                        operation.start()
-                    }
-                    }, completion: { (finished) -> Void in
-        //                self.blockOperations.removeAll(keepCapacity: false)
-                })
-
-
-    }
-
-
-
-
+    
 }

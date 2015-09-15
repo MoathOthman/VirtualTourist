@@ -29,6 +29,8 @@
 		EC14D2911B9A4500008B42E8 /* VLTPhotoCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC14D2901B9A4500008B42E8 /* VLTPhotoCollectionViewCell.swift */; };
 		EC14D2931B9A463F008B42E8 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC14D2921B9A463F008B42E8 /* ImageCache.swift */; };
 		ECCAD7AD1BA8461A00B501AF /* VLTPhotosFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCAD7AC1BA8461A00B501AF /* VLTPhotosFetcher.swift */; };
+		ECCAD7B01BA85B9100B501AF /* PhotosCollectionViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCAD7AF1BA85B9100B501AF /* PhotosCollectionViewDelegate.swift */; };
+		ECCAD7B21BA85BF500B501AF /* PhotosFetchControllerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCAD7B11BA85BF500B501AF /* PhotosFetchControllerDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,6 +71,8 @@
 		EC14D2921B9A463F008B42E8 /* ImageCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		EC14D2941B9C22D7008B42E8 /* MyPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = MyPlayground.playground; sourceTree = "<group>"; };
 		ECCAD7AC1BA8461A00B501AF /* VLTPhotosFetcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VLTPhotosFetcher.swift; sourceTree = "<group>"; };
+		ECCAD7AF1BA85B9100B501AF /* PhotosCollectionViewDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotosCollectionViewDelegate.swift; sourceTree = "<group>"; };
+		ECCAD7B11BA85BF500B501AF /* PhotosFetchControllerDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotosFetchControllerDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,7 +124,7 @@
 				EC02171F1B8C8A8B005C8084 /* AppDelegate.swift */,
 				EC0217241B8C8A8B005C8084 /* ViewController.swift */,
 				EC0217471B8C97C4005C8084 /* MapViewController.swift */,
-				EC0217441B8C9726005C8084 /* PhotosViewController.swift */,
+				ECCAD7AE1BA85B7900B501AF /* Photos View controller */,
 				EC14D2901B9A4500008B42E8 /* VLTPhotoCollectionViewCell.swift */,
 				EC0835541BA18F6A00C809D8 /* MapViewZoom.swift */,
 				ECCAD7AB1BA845DD00B501AF /* Utility */,
@@ -195,6 +199,16 @@
 				ECCAD7AC1BA8461A00B501AF /* VLTPhotosFetcher.swift */,
 			);
 			name = Utility;
+			sourceTree = "<group>";
+		};
+		ECCAD7AE1BA85B7900B501AF /* Photos View controller */ = {
+			isa = PBXGroup;
+			children = (
+				EC0217441B8C9726005C8084 /* PhotosViewController.swift */,
+				ECCAD7AF1BA85B9100B501AF /* PhotosCollectionViewDelegate.swift */,
+				ECCAD7B11BA85BF500B501AF /* PhotosFetchControllerDelegate.swift */,
+			);
+			name = "Photos View controller";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -322,12 +336,14 @@
 				EC0835531BA175DC00C809D8 /* Map.swift in Sources */,
 				EC0217251B8C8A8B005C8084 /* ViewController.swift in Sources */,
 				EC14D2151B948ED2008B42E8 /* Photo.swift in Sources */,
+				ECCAD7B21BA85BF500B501AF /* PhotosFetchControllerDelegate.swift in Sources */,
 				EC0217451B8C9726005C8084 /* PhotosViewController.swift in Sources */,
 				EC14D21F1B96E55C008B42E8 /* Pin.swift in Sources */,
 				EC14D2931B9A463F008B42E8 /* ImageCache.swift in Sources */,
 				EC0835551BA18F6A00C809D8 /* MapViewZoom.swift in Sources */,
 				EC02174B1B8F4A6D005C8084 /* VLTFlickerClient.swift in Sources */,
 				EC14D2911B9A4500008B42E8 /* VLTPhotoCollectionViewCell.swift in Sources */,
+				ECCAD7B01BA85B9100B501AF /* PhotosCollectionViewDelegate.swift in Sources */,
 				EC0217231B8C8A8B005C8084 /* VirtualTourist.xcdatamodeld in Sources */,
 				EC0217481B8C97C4005C8084 /* MapViewController.swift in Sources */,
 				EC0217201B8C8A8B005C8084 /* AppDelegate.swift in Sources */,
