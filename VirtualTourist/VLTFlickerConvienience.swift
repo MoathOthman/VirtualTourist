@@ -13,7 +13,7 @@ let SAFE_SEARCH = "1"
 let EXTRAS = "url_m"
 let DATA_FORMAT = "json"
 let NO_JSON_CALLBACK = "1"
-
+var randomindex: Int = -1
 
 extension VLTFlickerClient {
 
@@ -42,8 +42,8 @@ extension VLTFlickerClient {
 
             if let photosDictionary = response!.valueForKey("photos") as? [String:AnyObject] {
 
-                if let pages = photosDictionary["photo"] as? [AnyObject] {
-                    completionHandler(response: pages, error: nil)
+                if let photos = photosDictionary["photo"] as? [AnyObject], let pages = photosDictionary["pages"] as? Int {
+                    completionHandler(response: ["photos":photos,"pages":pages], error: nil)
                 } else {
                     println("Cant find key 'pages' in \(photosDictionary)")
                 }
@@ -77,6 +77,16 @@ extension VLTFlickerClient {
     }
 
     func randomSorting() -> String{
+        //its a way of randomizing the images
+        //using the different sorting types
+        //in this way we have only seven posibilities
+        //since Its not a good idea for me to use page numbers since in some cases they are limited (e.g desert)
+        // hence we will load empty results some way
+        // another way is to check the number of pages for some lat/lon and randomize through them
+        //lets take a cese 
+        /*where we have 10 pages from the first request by defult we will get results from page 1 but we will get the number of pages anyhow
+        then when the user click new collection next time we should preserve that total pages for this pin so we pick another random page*/
+        //this is not perfect but the simplest
         let sortTypes = ["date-posted-asc",
             "date-posted-desc",
             "date-taken-asc",
@@ -85,7 +95,11 @@ extension VLTFlickerClient {
             "interestingness-asc",
             "relevance",
         ]
-        let randomPhotoIndex = Int(arc4random_uniform(UInt32(sortTypes.count)))
+        var randomPhotoIndex = Int(arc4random_uniform(UInt32(sortTypes.count)))
+        while randomPhotoIndex == randomindex {
+            randomPhotoIndex = Int(arc4random_uniform(UInt32(sortTypes.count)))
+        }
+        randomindex = randomPhotoIndex
         return sortTypes[randomPhotoIndex]
     }
 

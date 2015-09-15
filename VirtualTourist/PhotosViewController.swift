@@ -98,6 +98,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
         } else {
             //Delete all photos and cells
 //            unHighLighAll()
+            cancelAllImagesDownloadTasks()
             deleteAllPhotos()
             self.bottomActionbarButton.enabled = false
             VLTPhotosFetcher.fetchPhotosForPin(self.currentPin!, context: sharedContext)
@@ -169,6 +170,16 @@ extension PhotosViewController {
 //MARK: Utility 
 
 extension PhotosViewController {
+    func cancelAllImagesDownloadTasks() {
+        let count = countOfEntities()
+        if count == 0 {return}
+
+        for i  in collectionView.indexPathsForVisibleItems() {
+            let cell = collectionView.cellForItemAtIndexPath(i as! NSIndexPath) as! VLTPhotoCollectionViewCell
+            cell.taskToCancelifCellIsReused = cell.task
+        }
+
+    }
     func deleteAllPhotos() {
         //FIXME: Should not be fixed number
         let count = countOfEntities()

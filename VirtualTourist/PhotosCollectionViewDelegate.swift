@@ -31,16 +31,12 @@ extension PhotosViewController {
         let CellIdentifier = "photoCell"
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as! VLTPhotoCollectionViewCell
         configureCell(cell, photo: photoForIndex(indexPath))
-//        highlightCell(indexPath, flag: false)
-//        highlightCell(indexPath, flag: !checkIfPhotoIsAlreadySelected(indexPath))
+
         let coverView: UIView = cell.contentView.viewWithTag(2)!
         if checkIfPhotoIsAlreadySelected(indexPath) {
             coverView.backgroundColor = UIColor(white: 0.8, alpha: 0.9)
-            //            indicesSelected[indexPath] = self.photoForIndex(indexPath)
         } else {
             coverView.backgroundColor = nil
-            //            indicesSelected.removeValueForKey(indexPath)
-            //            indicesSelected.removeAtIndex(indexPath.row)
         }
         return cell
     }
@@ -68,15 +64,15 @@ extension PhotosViewController {
                 if let data = imageData {
                     // Craete the image
                     let image = UIImage(data: data)
-                    photo.image = image
                     dispatch_async(dispatch_get_main_queue()) {
+                        photo.image = image 
                         imageView.image = image
                         animator.stopAnimating()
                     }
                 }
 
             })
-            
+            cell.task = task
             cell.taskToCancelifCellIsReused = task
         }
         imageView.image = pinImage

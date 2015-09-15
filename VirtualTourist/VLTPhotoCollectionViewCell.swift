@@ -10,7 +10,7 @@ import UIKit
 
 class VLTPhotoCollectionViewCell: UICollectionViewCell {
     var imageName: String = ""
-
+    var task: NSURLSessionTask!
     var taskToCancelifCellIsReused: NSURLSessionTask? {
 
         didSet {
