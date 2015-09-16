@@ -12,8 +12,12 @@ import CoreData
 
 let positionShitMax: CGFloat = 60
 let positionShitMin: CGFloat = 0
+let TAP_PINS_TO_DELETE = "Tap Pins to Delete"
+let DRAG_PINS_TO_UPDATE_LOCATIOM = "Drag Pins to Update Locations"
+
 class MapViewController: UIViewController,MKMapViewDelegate {
     var editorEnabled: Bool = false
+    var updatingEnabled: Bool = false
     let sharedContext = CoreDataStackManager.sharedInstance().managedObjectContext!
 
     /*Outlets*/
@@ -22,6 +26,10 @@ class MapViewController: UIViewController,MKMapViewDelegate {
     @IBOutlet weak var noteButtonHeightConstraint: NSLayoutConstraint!
     @IBOutlet weak var editBarButton: UIBarButtonItem!
     @IBOutlet weak var mapView: MKMapView!
+    @IBOutlet weak var updatePinsBarButton: UIBarButtonItem!
+    @IBOutlet weak var InstructionBottomButton: UIButton!
+
+
     var annotations = [MKPointAnnotation]()
     var _pins = [Pin]()
     var temporaryContext: NSManagedObjectContext!
@@ -51,6 +59,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         longPressRecogniser.minimumPressDuration = 1.0
         mapView.addGestureRecognizer(longPressRecogniser)
 
+        checkOnPinsAndEnabledOrDisableNavBarItems()
                // Do any additional setup after loading the view.
     }
     override func viewWillAppear(animated: Bool) {
@@ -60,6 +69,20 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         }
     }
 
+    func checkOnPinsAndEnabledOrDisableNavBarItems() {
+        if _pins.isEmpty {
+            //no pins currently
+            enableNavBarButtonsIfNeeded(false,force:true)
+        }
+    }
+    func enableNavBarButtonsIfNeeded(enabled: Bool,force: Bool) {
+        if !updatingEnabled || force {
+        editBarButton.enabled = enabled
+        }
+        if !editorEnabled || force {
+        updatePinsBarButton.enabled = enabled
+        }
+    }
     func centerMapOnLocation(location: CLLocation, latD: CLLocationDistance, lonD: CLLocationDistance) {
         let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate,
             latD , lonD )
@@ -67,21 +90,38 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         mapView.setCenterCoordinate(mapView.region.center, animated: true)
     }
     @IBAction func editPins(sender: AnyObject) {
-        if editorEnabled == false{
-            self.notebuttonBottomVerticalSpaceConstraint.constant = positionShitMin
+         if editorEnabled == false{
             editorEnabled = true
             editBarButton.title = "Done"
+            updatePinsBarButton.enabled = false
+            updatingEnabled = false
+            self.notebuttonBottomVerticalSpaceConstraint.constant = positionShitMin
+
          }else  {
-            self.notebuttonBottomVerticalSpaceConstraint.constant = -positionShitMax
             editorEnabled = false
             editBarButton.title = "Edit"
+            updatePinsBarButton.enabled = true
+            self.notebuttonBottomVerticalSpaceConstraint.constant = -positionShitMax
+
         }
         UIView.animateWithDuration(0.15, animations: { () -> Void in
             self.view.layoutIfNeeded()
         })
 
     }
+    func showInstructionPinsWithInstructions() {
+        if !updatingEnabled || (!updatingEnabled && !editorEnabled) {
+            self.notebuttonBottomVerticalSpaceConstraint.constant = positionShitMin
+            self.InstructionBottomButton.setTitle(DRAG_PINS_TO_UPDATE_LOCATIOM, forState: .Normal)
+        } else {
+            self.InstructionBottomButton.setTitle(TAP_PINS_TO_DELETE, forState: .Normal)
+            self.notebuttonBottomVerticalSpaceConstraint.constant = -positionShitMax
+        }
+        UIView.animateWithDuration(0.15, animations: { () -> Void in
+            self.view.layoutIfNeeded()
+        })
 
+    }
     func fetchAllPins() -> [Pin] {
         let error: NSErrorPointer = nil
 
@@ -106,6 +146,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
 
         CoreDataStackManager.sharedInstance().saveContext()
         VLTPhotosFetcher.fetchPhotosForPin(pin, context: sharedContext)
+        enableNavBarButtonsIfNeeded(true,force: false)
     }
 
     func handleLongPress(getstureRecognizer : UIGestureRecognizer){
@@ -160,11 +201,12 @@ extension MapViewController {
                 as? MKPinAnnotationView { // 2
                     dequeuedView.annotation = annotation
                     view = dequeuedView
+                    view.draggable = true
             } else {
                 // 3
                 view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
                 view.animatesDrop = true
-
+                view.draggable = true
             }
             return view
         }
@@ -174,12 +216,14 @@ extension MapViewController {
         calloutAccessoryControlTapped control: UIControl!) {
     }
     func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
+        if updatingEnabled {
+            return
+        }
         if editorEnabled {
             if let pin = getPinObjectForAnnotation(view.annotation) {
                 sharedContext.deleteObject(pin)
             }
             mapView.removeAnnotation(view.annotation)
-
             sharedContext.save(nil)
         } else {
             let photosViewController: PhotosViewController? = self.storyboard?.instantiateViewControllerWithIdentifier("PhotosViewController") as? PhotosViewController
@@ -188,6 +232,9 @@ extension MapViewController {
             self.navigationController?.pushViewController(photosViewController! as UIViewController, animated: true)
         }
         mapView.deselectAnnotation(view.annotation, animated: true)
+    }
+    func mapView(mapView: MKMapView!, didDeselectAnnotationView view: MKAnnotationView!) {
+
     }
 
     func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
@@ -202,5 +249,43 @@ extension MapViewController {
         CoreDataStackManager.sharedInstance().saveContext()
 
     }
+    func mapView(mapView: MKMapView!, annotationView view: MKAnnotationView!, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+        var pin:Pin
+        if newState == MKAnnotationViewDragState.Starting {
+            //Get the pin for the annotation
+            pin = getPinObjectForAnnotation(view.annotation)!
+        }
+        if newState == MKAnnotationViewDragState.Ending {
+            pin = Pin(dictionary: ["lat":view.annotation.coordinate.latitude,"lon":view.annotation.coordinate.longitude], context: self.sharedContext)
+            for photo in pin.photos {
+                ImageCache.sharedInstance().removeImageWithIdentifier((photo as! Photo).url_m.lastPathComponent)
+            }
+            pin.photos = NSSet() //reset photos
+            pin.isPhotosDownloaded = false
+            pin.isPinMoved = true
+            CoreDataStackManager.sharedInstance().saveContext()
+            mapView.deselectAnnotation(view.annotation, animated: true)
+            //fetch again 
+            VLTPhotosFetcher.fetchPhotosForPin(pin, context: sharedContext)
+        }
+
+    }
+
+
+    @IBAction func updatePinsLocation(sender: UIBarButtonItem) {
+        showInstructionPinsWithInstructions()
+        if !updatingEnabled {
+            updatePinsBarButton.title = "Done"
+            editBarButton.enabled = false // no editting while updating
+            editorEnabled = false
+
+        }else {
+            updatePinsBarButton.title = "Update Pins"
+            editBarButton.enabled = true // no editting while updating
+
+        }
+        updatingEnabled = !updatingEnabled
+    }
+
 }
 

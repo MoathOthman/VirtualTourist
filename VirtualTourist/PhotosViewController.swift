@@ -39,6 +39,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
             if currentPin?.isPhotosDownloaded == true {
                 noteLabel.hidden = false
             }
+            
         }
 
         NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("photosHaveBeenFetched:"), name: FETCHING_PHOTOS_FOR_PIN, object: nil)

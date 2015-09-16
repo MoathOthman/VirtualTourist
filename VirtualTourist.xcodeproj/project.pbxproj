@@ -263,6 +263,11 @@
 					EC0217191B8C8A8B005C8084 = {
 						CreatedOnToolsVersion = 6.4;
 						DevelopmentTeam = 8UPFK2A3SH;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 					EC0217311B8C8A8C005C8084 = {
 						CreatedOnToolsVersion = 6.4;

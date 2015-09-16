@@ -71,6 +71,11 @@
                         </variation>
                     </view>
                     <navigationItem key="navigationItem" title="Virtual Tourist" id="bHO-qR-F3S">
+                        <barButtonItem key="leftBarButtonItem" title="Update Pins" style="plain" id="eR0-0f-gxS">
+                            <connections>
+                                <action selector="updatePinsLocation:" destination="vXZ-lx-hvc" id="qna-G2-5ft"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" title="Edit" id="Mf0-Oe-YNJ">
                             <connections>
                                 <action selector="editPins:" destination="vXZ-lx-hvc" id="nuu-3p-JxL"/>
@@ -78,10 +83,12 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="InstructionBottomButton" destination="1U6-5l-F45" id="Upn-nf-r91"/>
                         <outlet property="editBarButton" destination="Mf0-Oe-YNJ" id="TZP-Me-WwI"/>
                         <outlet property="mapView" destination="gMk-8m-2BQ" id="Fgz-Kf-yrO"/>
                         <outlet property="noteButtonHeightConstraint" destination="Z2z-K0-hq7" id="WQy-4V-sR0"/>
                         <outlet property="notebuttonBottomVerticalSpaceConstraint" destination="pGf-HW-K1U" id="VkP-1a-V8c"/>
+                        <outlet property="updatePinsBarButton" destination="eR0-0f-gxS" id="WWD-Bm-ELR"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
