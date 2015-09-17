@@ -45,5 +45,10 @@ class Photo: NSManagedObject {
             ImageCache.sharedInstance().storeImage(newValue, withIdentifier: url_m.lastPathComponent)
         }
     }
-
+    override func prepareForDeletion() {
+        let path = ImageCache.sharedInstance().pathForIdentifier(self.url_m.lastPathComponent)
+        if NSFileManager.defaultManager().fileExistsAtPath(path) {
+            NSFileManager.defaultManager().removeItemAtPath(path, error: nil)
+        }
+    }
 }

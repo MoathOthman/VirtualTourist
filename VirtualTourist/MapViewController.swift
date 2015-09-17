@@ -257,9 +257,6 @@ extension MapViewController {
         }
         if newState == MKAnnotationViewDragState.Ending {
             pin = Pin(dictionary: ["lat":view.annotation.coordinate.latitude,"lon":view.annotation.coordinate.longitude], context: self.sharedContext)
-            for photo in pin.photos {
-                ImageCache.sharedInstance().removeImageWithIdentifier((photo as! Photo).url_m.lastPathComponent)
-            }
             pin.photos = NSSet() //reset photos
             pin.isPhotosDownloaded = false
             pin.isPinMoved = true

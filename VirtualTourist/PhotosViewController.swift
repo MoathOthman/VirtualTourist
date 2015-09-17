@@ -192,7 +192,6 @@ extension PhotosViewController {
         CoreDataStackManager.sharedInstance().saveContext()
     }
     func deletePhoto(_photo: Photo) {
-        ImageCache.sharedInstance().removeImageWithIdentifier(_photo.url_m.lastPathComponent)
         self.sharedContext.deleteObject(_photo)
     }
     func countOfEntities() -> Int {
