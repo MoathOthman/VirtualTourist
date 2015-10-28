@@ -16,8 +16,7 @@ extension PhotosViewController {
     //MARK:CollectionView Datasource
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section] as!
-        NSFetchedResultsSectionInfo
+        let sectionInfo = self.fetchedResultsController.sections![section] 
         if sectionInfo.numberOfObjects == 0 {
             collectionView.backgroundColor = UIColor.clearColor()
         }else {
@@ -43,8 +42,8 @@ extension PhotosViewController {
 
     
     func configureCell(cell: VLTPhotoCollectionViewCell, photo: Photo) {
-        var imageView = cell.contentView.viewWithTag(1) as! UIImageView
-        var animator = cell.contentView.viewWithTag(3) as! UIActivityIndicatorView
+        let imageView = cell.contentView.viewWithTag(1) as! UIImageView
+        let animator = cell.contentView.viewWithTag(3) as! UIActivityIndicatorView
 
         var pinImage = UIImage(named: "posterPlaceHoldr")
 
@@ -58,7 +57,7 @@ extension PhotosViewController {
             animator.startAnimating()
             let task =  VLTFlickerClient.sharedInstance().taskForImageWithURL(photo.url_m, completionHandler: { (imageData, error) -> Void in
                 if let error = error {
-                    println("Poster download error: \(error.localizedDescription)")
+                    print("Poster download error: \(error.localizedDescription)")
                 }
 
                 if let data = imageData {
@@ -137,7 +136,7 @@ extension PhotosViewController {
         let indexpaths = indicesSelected.keys
 
         for item  in indexpaths {
-                let cell = collectionView!.cellForItemAtIndexPath(item  )
+                _ = collectionView!.cellForItemAtIndexPath(item  )
                 collectionView?.deselectItemAtIndexPath(item  , animated: true)
                 // fruits for section
                 let sectionfruits = indicesSelected[item]

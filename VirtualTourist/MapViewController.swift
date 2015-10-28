@@ -37,7 +37,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
     func buildAnnotationsFromPins() {
       _pins = fetchAllPins()
         for pin in _pins {
-            var annotation = MKPointAnnotation()
+            let annotation = MKPointAnnotation()
             annotation.coordinate.latitude = CLLocationDegrees(pin.lat.doubleValue)
             annotation.coordinate.longitude = CLLocationDegrees(pin.lon.doubleValue)
             annotations.append(annotation)
@@ -54,7 +54,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         temporaryContext.persistentStoreCoordinator = sharedContext.persistentStoreCoordinator
 
         
-        var longPressRecogniser = UILongPressGestureRecognizer(target: self, action: "handleLongPress:")
+        let longPressRecogniser = UILongPressGestureRecognizer(target: self, action: "handleLongPress:")
         notebuttonBottomVerticalSpaceConstraint.constant = -positionShitMax
         longPressRecogniser.minimumPressDuration = 1.0
         mapView.addGestureRecognizer(longPressRecogniser)
@@ -64,7 +64,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
     }
     override func viewWillAppear(animated: Bool) {
         if let map = Map.fetchMapObject(sharedContext) {
-            var centerLocation = CLLocation(latitude:CLLocationDegrees(map.centerX), longitude: CLLocationDegrees(map.centerY))
+            let centerLocation = CLLocation(latitude:CLLocationDegrees(map.centerX), longitude: CLLocationDegrees(map.centerY))
             centerMapOnLocation(centerLocation, latD: CLLocationDistance(map.latDistance), lonD: CLLocationDistance(map.lonDistance))
         }
     }
@@ -84,7 +84,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         }
     }
     func centerMapOnLocation(location: CLLocation, latD: CLLocationDistance, lonD: CLLocationDistance) {
-        let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate,
+        _ = MKCoordinateRegionMakeWithDistance(location.coordinate,
             latD , lonD )
         mapView.region = MKCoordinateRegion(center: location.coordinate, span: MKCoordinateSpanMake(latD, lonD))
         mapView.setCenterCoordinate(mapView.region.center, animated: true)
@@ -129,11 +129,17 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         let fetchRequest = NSFetchRequest(entityName: "Pin")
 
         // Execute the Fetch Request
-        let results = sharedContext.executeFetchRequest(fetchRequest, error: error)
+        let results: [AnyObject]?
+        do {
+            results = try sharedContext.executeFetchRequest(fetchRequest)
+        } catch let error1 as NSError {
+            error.memory = error1
+            results = nil
+        }
 
         // Check for Errors
         if error != nil {
-            println("Error in fectchAllActors(): \(error)")
+            print("Error in fectchAllActors(): \(error)")
         }
 
         // Return the results, cast to an array of Person objects
@@ -141,7 +147,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
     }
 
     func addAnnotationInDB(annotation: MKPointAnnotation) {
-       var pin = Pin(dictionary: ["lat":annotation.coordinate.latitude,"lon":annotation.coordinate.longitude], context: self.sharedContext)
+       let pin = Pin(dictionary: ["lat":annotation.coordinate.latitude,"lon":annotation.coordinate.longitude], context: self.sharedContext)
         _pins.append(pin)
 
         CoreDataStackManager.sharedInstance().saveContext()
@@ -193,9 +199,8 @@ extension MapViewController {
         let rounded = round(mul) / multiplier
         return rounded
     }
-    func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
-        if let annotation = annotation   {
-            let identifier = "pin"
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+             let identifier = "pin"
             var view: MKPinAnnotationView
             if let dequeuedView = mapView.dequeueReusableAnnotationViewWithIdentifier(identifier)
                 as? MKPinAnnotationView { // 2
@@ -209,13 +214,11 @@ extension MapViewController {
                 view.draggable = true
             }
             return view
-        }
-        return nil
+     }
+    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView,
+        calloutAccessoryControlTapped control: UIControl) {
     }
-    func mapView(mapView: MKMapView!, annotationView view: MKAnnotationView!,
-        calloutAccessoryControlTapped control: UIControl!) {
-    }
-    func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         if updatingEnabled {
             return
         }
@@ -223,8 +226,11 @@ extension MapViewController {
             if let pin = getPinObjectForAnnotation(view.annotation) {
                 sharedContext.deleteObject(pin)
             }
-            mapView.removeAnnotation(view.annotation)
-            sharedContext.save(nil)
+            mapView.removeAnnotation(view.annotation!)
+            do {
+                try sharedContext.save()
+            } catch _ {
+            }
         } else {
             let photosViewController: PhotosViewController? = self.storyboard?.instantiateViewControllerWithIdentifier("PhotosViewController") as? PhotosViewController
             photosViewController?.currentannotation = view.annotation
@@ -233,30 +239,30 @@ extension MapViewController {
         }
         mapView.deselectAnnotation(view.annotation, animated: true)
     }
-    func mapView(mapView: MKMapView!, didDeselectAnnotationView view: MKAnnotationView!) {
+    func mapView(mapView: MKMapView, didDeselectAnnotationView view: MKAnnotationView) {
 
     }
 
-    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
-        let latitudeCircumference = 40075160 * cos(self.mapView.region.center.latitude * M_PI / 180)
-        var parameters = [
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        _ = 40075160 * cos(self.mapView.region.center.latitude * M_PI / 180)
+        let parameters = [
             Map.Keys.latDistance: mapView.region.span.latitudeDelta  ,
             Map.Keys.lonDistance: mapView.region.span.longitudeDelta ,
             Map.Keys.centerX:Float(mapView.region.center.latitude),
             Map.Keys.centerY:Float(mapView.region.center.longitude)
         ]
-        Map(dictionary: parameters as! [String : AnyObject], context: sharedContext)
+        _ = Map(dictionary: parameters as! [String : AnyObject], context: sharedContext)
         CoreDataStackManager.sharedInstance().saveContext()
 
     }
-    func mapView(mapView: MKMapView!, annotationView view: MKAnnotationView!, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
         var pin:Pin
         if newState == MKAnnotationViewDragState.Starting {
             //Get the pin for the annotation
             pin = getPinObjectForAnnotation(view.annotation)!
         }
         if newState == MKAnnotationViewDragState.Ending {
-            pin = Pin(dictionary: ["lat":view.annotation.coordinate.latitude,"lon":view.annotation.coordinate.longitude], context: self.sharedContext)
+            pin = Pin(dictionary: ["lat":view.annotation!.coordinate.latitude,"lon":view.annotation!.coordinate.longitude], context: self.sharedContext)
             pin.photos = NSSet() //reset photos
             pin.isPhotosDownloaded = false
             pin.isPinMoved = true

@@ -40,7 +40,7 @@ class VLTFlickerClient: NSObject {
     func taskForMethodParameters(parameters: [String : AnyObject], completionHandler: CommonAPICompletionHandler) -> NSURLSessionDataTask {
 
         /* 1. Set the parameters */
-        var mutableParameters = parameters
+        let mutableParameters = parameters
 
         /* 2/3. Build the URL and configure the request */
         let urlString = Constants.BaseURL + VLTFlickerClient.escapedParameters(mutableParameters)
@@ -52,12 +52,12 @@ class VLTFlickerClient: NSObject {
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 /* 5/6. Parse the data and use the data (happens in completion handler) */
                 if let error = downloadError {
-                    let newError = VLTFlickerClient.errorForData(data, response: response, error: error)
+                    _ = VLTFlickerClient.errorForData(data, response: response, error: error)
                     completionHandler(response: nil, error: downloadError)
                 } else {
                     let newData = data
 
-                    VLTFlickerClient.parseJSONWithCompletionHandler(newData, completionHandler: completionHandler)
+                    VLTFlickerClient.parseJSONWithCompletionHandler(newData!, completionHandler: completionHandler)
                 }
             })
 
@@ -75,7 +75,7 @@ class VLTFlickerClient: NSObject {
     func taskForGETMethod(method: String, parameters: [String : AnyObject], completionHandler: CommonAPICompletionHandler) -> NSURLSessionDataTask {
 
         /* 1. Set the parameters */
-        var mutableParameters = parameters
+        let mutableParameters = parameters
 
         /* 2/3. Build the URL and configure the request */
         let urlString = Constants.BaseURLSecure + method + VLTFlickerClient.escapedParameters(mutableParameters)
@@ -87,10 +87,10 @@ class VLTFlickerClient: NSObject {
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 /* 5/6. Parse the data and use the data (happens in completion handler) */
                 if let error = downloadError {
-                    let newError = VLTFlickerClient.errorForData(data, response: response, error: error)
+                    _ = VLTFlickerClient.errorForData(data, response: response, error: error)
                     completionHandler(response: nil, error: downloadError)
                 } else {
-                    let newData = data.subdataWithRange(NSMakeRange(5, data.length - 5)) /* subset response data! */
+                    let newData = data!.subdataWithRange(NSMakeRange(5, data!.length - 5)) /* subset response data! */
 
                     VLTFlickerClient.parseJSONWithCompletionHandler(newData, completionHandler: completionHandler)
                 }
@@ -117,11 +117,14 @@ class VLTFlickerClient: NSObject {
         let urlString = Constants.BaseURLSecure + method + VLTFlickerClient.escapedParameters(mutableParameters)
         let url = NSURL(string: urlString)!
         let request = NSMutableURLRequest(URL: url)
-        var jsonifyError: NSError? = nil
         request.HTTPMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.HTTPBody = NSJSONSerialization.dataWithJSONObject(jsonBody, options: nil, error: &jsonifyError)
+        do {
+            request.HTTPBody = try NSJSONSerialization.dataWithJSONObject(jsonBody, options: [])
+        } catch _ as NSError {
+             request.HTTPBody = nil
+        }
 
         /* 4. Make the request */
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
@@ -129,10 +132,10 @@ class VLTFlickerClient: NSObject {
                 /* 5/6. Parse the data and use the data (happens in completion handler) */
                 dispatch_async(dispatch_get_main_queue(), { () -> Void in
                     if let error = downloadError {
-                        let newError = VLTFlickerClient.errorForData(data, response: response, error: error)
+                        _ = VLTFlickerClient.errorForData(data, response: response, error: error)
                         completionHandler(response: nil, error: downloadError)
                     } else {
-                        let newData = data.subdataWithRange(NSMakeRange(5, data.length - 5)) /* subset response data! */
+                        let newData = data!.subdataWithRange(NSMakeRange(5, data!.length - 5)) /* subset response data! */
                         VLTFlickerClient.parseJSONWithCompletionHandler(newData, completionHandler: completionHandler)
                     }
                 })
@@ -161,7 +164,7 @@ class VLTFlickerClient: NSObject {
     /* Helper: Given a response with error, see if a status_message is returned, otherwise return the previous error */
     class func errorForData(data: NSData?, response: NSURLResponse?, error: NSError) -> NSError {
 
-        if let parsedResult = NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments, error: nil) as? [String : AnyObject] {
+        if let parsedResult = (try? NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments)) as? [String : AnyObject] {
 
             if let errorMessage = parsedResult[VLTFlickerClient.JSONResponseKeys.StatusMessage] as? String {
 
@@ -179,7 +182,13 @@ class VLTFlickerClient: NSObject {
 
         var parsingError: NSError? = nil
 
-        let parsedResult: AnyObject? = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError)
+        let parsedResult: AnyObject?
+        do {
+            parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
+        } catch let error as NSError {
+            parsingError = error
+            parsedResult = nil
+        }
 
         if let error = parsingError {
             completionHandler(response: nil, error: error)
@@ -206,7 +215,7 @@ class VLTFlickerClient: NSObject {
             
         }
         
-        return (!urlVars.isEmpty ? "?" : "") + join("&", urlVars)
+        return (!urlVars.isEmpty ? "?" : "") + urlVars.joinWithSeparator("&")
     }
     
     // MARK: - Shared Instance

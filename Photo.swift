@@ -39,16 +39,19 @@ class Photo: NSManagedObject {
     }
     var image: UIImage? {
         get {
-            return ImageCache.sharedInstance().imageWithIdentifier(url_m.lastPathComponent)
+            return ImageCache.sharedInstance().imageWithIdentifier((url_m as NSString).lastPathComponent)
         }
         set {
-            ImageCache.sharedInstance().storeImage(newValue, withIdentifier: url_m.lastPathComponent)
+            ImageCache.sharedInstance().storeImage(newValue, withIdentifier: (url_m as NSString).lastPathComponent)
         }
     }
     override func prepareForDeletion() {
-        let path = ImageCache.sharedInstance().pathForIdentifier(self.url_m.lastPathComponent)
+        let path = ImageCache.sharedInstance().pathForIdentifier((self.url_m as NSString).lastPathComponent)
         if NSFileManager.defaultManager().fileExistsAtPath(path) {
-            NSFileManager.defaultManager().removeItemAtPath(path, error: nil)
+            do {
+                try NSFileManager.defaultManager().removeItemAtPath(path)
+            } catch _ {
+            }
         }
     }
 }

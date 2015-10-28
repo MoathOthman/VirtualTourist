@@ -38,17 +38,17 @@ extension VLTFlickerClient {
         ]
 
         taskForMethodParameters(methodArguments as! [String : AnyObject], completionHandler: { (response, error) -> Void in
-            print("response is \(response)" )
+            print("response is \(response)", terminator: "" )
 
             if let photosDictionary = response!.valueForKey("photos") as? [String:AnyObject] {
 
                 if let photos = photosDictionary["photo"] as? [AnyObject], let pages = photosDictionary["pages"] as? Int {
                     completionHandler(response: ["photos":photos,"pages":pages], error: nil)
                 } else {
-                    println("Cant find key 'pages' in \(photosDictionary)")
+                    print("Cant find key 'pages' in \(photosDictionary)")
                 }
             } else {
-                println("Cant find key 'photos' in \(response)")
+                print("Cant find key 'photos' in \(response)")
             }
             
         })
@@ -58,7 +58,7 @@ extension VLTFlickerClient {
     func taskForImageWithURL(url: String, completionHandler: (imageData: NSData?, error: NSError?) ->  Void) -> NSURLSessionTask {
 
          let url = NSURL(string: url)!
-         println(url)
+         print(url)
 
         let request = NSURLRequest(URL: url)
 

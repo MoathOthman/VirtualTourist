@@ -30,7 +30,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
     //MARK: View LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        mapView.addAnnotation(currentannotation)
+        mapView.addAnnotation(currentannotation!)
         if currentPin?.photos.count > 0 {
             //get from db
             self.bottomActionbarButton.enabled = true
@@ -46,14 +46,17 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
 
         collectionView.allowsMultipleSelection = true
 
-        // Step 2: Perform the fetch
-        fetchedResultsController.performFetch(nil)
+        do {
+            // Step 2: Perform the fetch
+            try fetchedResultsController.performFetch()
+        } catch _ {
+        }
 
         // Step 6: Set the delegate to this view controller
         fetchedResultsController.delegate = self
 
         // back button
-        var backbutton = UIBarButtonItem()
+        let backbutton = UIBarButtonItem()
         backbutton.title = "OK"
         self.navigationController?.navigationBar.topItem?.backBarButtonItem = backbutton
 
@@ -116,9 +119,8 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
 
 
     //MARK: MapView Delegate
-    func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
-        if let annotation = annotation   {
-            let identifier = "pin"
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+             let identifier = "pin"
             var view: MKPinAnnotationView
             if let dequeuedView = mapView.dequeueReusableAnnotationViewWithIdentifier(identifier)
                 as? MKPinAnnotationView { // 2
@@ -130,8 +132,6 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
                 view.animatesDrop = true
             }
             return view
-        }
-        return nil
     }
 
     
@@ -156,7 +156,7 @@ extension PhotosViewController {
             self.collectionView.performBatchUpdates(nil, completion: { (bo) -> Void in
             })
             }, completion: { (UIViewControllerTransitionCoordinatorContext) -> Void in
-                println("rotation completed")
+                print("rotation completed")
         })
         super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
     }
@@ -176,7 +176,7 @@ extension PhotosViewController {
         if count == 0 {return}
 
         for i  in collectionView.indexPathsForVisibleItems() {
-            let cell = collectionView.cellForItemAtIndexPath(i as! NSIndexPath) as! VLTPhotoCollectionViewCell
+            let cell = collectionView.cellForItemAtIndexPath(i ) as! VLTPhotoCollectionViewCell
             cell.taskToCancelifCellIsReused = cell.task
         }
 

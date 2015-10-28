@@ -22,7 +22,7 @@ class VLTPhotosFetcher: NSObject {
             // Handle the error case
             var notificationObject = [String: AnyObject]()
             if let error = error {
-                println("Error searching for actors: \(error.localizedDescription)")
+                print("Error searching for actors: \(error.localizedDescription)")
                  notificationObject = ["error": 1,"finished":1]
                 return
             }

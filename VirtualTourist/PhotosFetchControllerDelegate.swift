@@ -20,7 +20,7 @@ extension PhotosViewController {
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
 
         if type == NSFetchedResultsChangeType.Insert {
-            println("Insert Object: \(newIndexPath)")
+            print("Insert Object: \(newIndexPath)")
 
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
@@ -31,7 +31,7 @@ extension PhotosViewController {
             )
         }
         else if type == NSFetchedResultsChangeType.Update {
-            println("Update Object: \(indexPath)")
+            print("Update Object: \(indexPath)")
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
                     if let this = self {
@@ -41,7 +41,7 @@ extension PhotosViewController {
             )
         }
         else if type == NSFetchedResultsChangeType.Move {
-            println("Move Object: \(indexPath)")
+            print("Move Object: \(indexPath)")
 
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
@@ -52,7 +52,7 @@ extension PhotosViewController {
             )
         }
         else if type == NSFetchedResultsChangeType.Delete {
-            println("Delete Object: \(indexPath)")
+            print("Delete Object: \(indexPath)")
 
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
@@ -68,7 +68,7 @@ extension PhotosViewController {
     func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
 
         if type == NSFetchedResultsChangeType.Insert {
-            println("Insert Section: \(sectionIndex)")
+            print("Insert Section: \(sectionIndex)")
 
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
@@ -79,7 +79,7 @@ extension PhotosViewController {
             )
         }
         else if type == NSFetchedResultsChangeType.Update {
-            println("Update Section: \(sectionIndex)")
+            print("Update Section: \(sectionIndex)")
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
                     if let this = self {
@@ -89,7 +89,7 @@ extension PhotosViewController {
             )
         }
         else if type == NSFetchedResultsChangeType.Delete {
-            println("Delete Section: \(sectionIndex)")
+            print("Delete Section: \(sectionIndex)")
 
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in

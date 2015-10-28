@@ -47,10 +47,16 @@ class Map: NSManagedObject {
         // Create the Fetch Request
         let fetchRequest = NSFetchRequest(entityName: "Map")
         // Execute the Fetch Request
-        let results = context.executeFetchRequest(fetchRequest, error: error)
+        let results: [AnyObject]?
+        do {
+            results = try context.executeFetchRequest(fetchRequest)
+        } catch let error1 as NSError {
+            error.memory = error1
+            results = nil
+        }
         // Check for Errors
         if error != nil {
-            println("Error in fectchAllActors(): \(error)")
+            print("Error in fectchAllActors(): \(error)")
         }
         // Return the results, cast to an array of Person objects
         return results?.last as? Map
