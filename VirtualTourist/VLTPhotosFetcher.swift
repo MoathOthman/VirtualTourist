@@ -37,10 +37,10 @@ class VLTPhotosFetcher: NSObject {
                 if photos.count == 0 {
                     notificationObject = ["error": 1,"finished":1]
                 } else {
-                notificationObject = ["error": 0,"finished":1]
+                    notificationObject = ["error": 0,"finished":1]
                 }
             } else {
-                notificationObject = ["error": 1,"finished":1]
+                    notificationObject = ["error": 1,"finished":1]
             }
             pin.isPhotosDownloaded = true
             NSNotificationCenter.defaultCenter().postNotificationName(FETCHING_PHOTOS_FOR_PIN, object: notificationObject)
