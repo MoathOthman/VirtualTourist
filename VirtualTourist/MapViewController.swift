@@ -54,7 +54,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         temporaryContext.persistentStoreCoordinator = sharedContext.persistentStoreCoordinator
 
         
-        let longPressRecogniser = UILongPressGestureRecognizer(target: self, action: "handleLongPress:")
+        let longPressRecogniser = UILongPressGestureRecognizer(target: self, action: #selector(MapViewController.handleLongPress(_:)))
         notebuttonBottomVerticalSpaceConstraint.constant = -positionShitMax
         longPressRecogniser.minimumPressDuration = 1.0
         mapView.addGestureRecognizer(longPressRecogniser)

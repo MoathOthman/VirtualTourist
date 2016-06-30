@@ -42,7 +42,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
             
         }
 
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("photosHaveBeenFetched:"), name: FETCHING_PHOTOS_FOR_PIN, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(PhotosViewController.photosHaveBeenFetched(_:)), name: FETCHING_PHOTOS_FOR_PIN, object: nil)
 
         collectionView.allowsMultipleSelection = true
 
