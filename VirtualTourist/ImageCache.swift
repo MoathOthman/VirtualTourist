@@ -10,7 +10,7 @@ import UIKit
 
 class ImageCache {
     
-    private var inMemoryCache = NSCache()
+    fileprivate var inMemoryCache = NSCache<NSString,UIImage>()
     class func sharedInstance() -> ImageCache {
 
         struct Singleton {
@@ -21,7 +21,7 @@ class ImageCache {
     }
     // MARK: - Retreiving images
     
-    func imageWithIdentifier(identifier: String?) -> UIImage? {
+    func imageWithIdentifier(_ identifier: String?) -> UIImage? {
         
         // If the identifier is nil, or empty, return nil
         if identifier == nil || identifier! == "" {
@@ -31,12 +31,12 @@ class ImageCache {
         let path = pathForIdentifier(identifier!)
         
         // First try the memory cache
-        if let image = inMemoryCache.objectForKey(path) as? UIImage {
+        if let image = inMemoryCache.object(forKey: NSString(string: path))  {
             return image
         }
         
         // Next Try the hard drive
-        if let data = NSData(contentsOfFile: path) {
+        if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
             return UIImage(data: data)
         }
         
@@ -45,40 +45,40 @@ class ImageCache {
     
     // MARK: - Saving images
     
-    func storeImage(image: UIImage?, withIdentifier identifier: String) {
+    func storeImage(_ image: UIImage?, withIdentifier identifier: String) {
         let path = pathForIdentifier(identifier)
         
         // If the image is nil, remove images from the cache
         if image == nil {
-            inMemoryCache.removeObjectForKey(path)
+            inMemoryCache.removeObject(forKey: path as NSString)
             do {
-                try NSFileManager.defaultManager().removeItemAtPath(path)
+                try FileManager.default.removeItem(atPath: path)
             } catch _ {
             }
             return
         }
         
         // Otherwise, keep the image in memory
-        inMemoryCache.setObject(image!, forKey: path)
+        inMemoryCache.setObject(image!, forKey: path as NSString)
         
         // And in documents directory
         let data = UIImagePNGRepresentation(image!)
-        data!.writeToFile(path, atomically: true)
+        try? data!.write(to: URL(fileURLWithPath: path), options: [.atomic])
     }
     
     // MARK: - Helper
 
-    func pathForIdentifier(identifier: String) -> String {
-        let documentsDirectoryURL: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
-        let fullURL = documentsDirectoryURL.URLByAppendingPathComponent(identifier)
+    func pathForIdentifier(_ identifier: String) -> String {
+        let documentsDirectoryURL: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fullURL = documentsDirectoryURL.appendingPathComponent(identifier)
         
-        return fullURL.path!
+        return fullURL.path
     }
-    func removeImageWithIdentifier(identifier: String) {
+    func removeImageWithIdentifier(_ identifier: String) {
         let path = pathForIdentifier(identifier)
-        if NSFileManager.defaultManager().fileExistsAtPath(path) {
+        if FileManager.default.fileExists(atPath: path) {
             do {
-                try NSFileManager.defaultManager().removeItemAtPath(path)
+                try FileManager.default.removeItem(atPath: path)
             } catch _ {
             }
         }

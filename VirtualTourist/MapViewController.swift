@@ -50,7 +50,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         self.buildAnnotationsFromPins()
 
         // Set the temporary context
-        temporaryContext = NSManagedObjectContext(concurrencyType: NSManagedObjectContextConcurrencyType.MainQueueConcurrencyType)
+        temporaryContext = NSManagedObjectContext(concurrencyType: NSManagedObjectContextConcurrencyType.mainQueueConcurrencyType)
         temporaryContext.persistentStoreCoordinator = sharedContext.persistentStoreCoordinator
 
         
@@ -62,7 +62,7 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         checkOnPinsAndEnabledOrDisableNavBarItems()
                // Do any additional setup after loading the view.
     }
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         if let map = Map.fetchMapObject(sharedContext) {
             let centerLocation = CLLocation(latitude:CLLocationDegrees(map.centerX), longitude: CLLocationDegrees(map.centerY))
             centerMapOnLocation(centerLocation, latD: CLLocationDistance(map.latDistance), lonD: CLLocationDistance(map.lonDistance))
@@ -75,36 +75,36 @@ class MapViewController: UIViewController,MKMapViewDelegate {
             enableNavBarButtonsIfNeeded(false,force:true)
         }
     }
-    func enableNavBarButtonsIfNeeded(enabled: Bool,force: Bool) {
+    func enableNavBarButtonsIfNeeded(_ enabled: Bool,force: Bool) {
         if !updatingEnabled || force {
-        editBarButton.enabled = enabled
+        editBarButton.isEnabled = enabled
         }
         if !editorEnabled || force {
-        updatePinsBarButton.enabled = enabled
+        updatePinsBarButton.isEnabled = enabled
         }
     }
-    func centerMapOnLocation(location: CLLocation, latD: CLLocationDistance, lonD: CLLocationDistance) {
+    func centerMapOnLocation(_ location: CLLocation, latD: CLLocationDistance, lonD: CLLocationDistance) {
         _ = MKCoordinateRegionMakeWithDistance(location.coordinate,
             latD , lonD )
         mapView.region = MKCoordinateRegion(center: location.coordinate, span: MKCoordinateSpanMake(latD, lonD))
-        mapView.setCenterCoordinate(mapView.region.center, animated: true)
+        mapView.setCenter(mapView.region.center, animated: true)
     }
-    @IBAction func editPins(sender: AnyObject) {
+    @IBAction func editPins(_ sender: AnyObject) {
          if editorEnabled == false{
             editorEnabled = true
             editBarButton.title = "Done"
-            updatePinsBarButton.enabled = false
+            updatePinsBarButton.isEnabled = false
             updatingEnabled = false
             self.notebuttonBottomVerticalSpaceConstraint.constant = positionShitMin
 
          }else  {
             editorEnabled = false
             editBarButton.title = "Edit"
-            updatePinsBarButton.enabled = true
+            updatePinsBarButton.isEnabled = true
             self.notebuttonBottomVerticalSpaceConstraint.constant = -positionShitMax
 
         }
-        UIView.animateWithDuration(0.15, animations: { () -> Void in
+        UIView.animate(withDuration: 0.15, animations: { () -> Void in
             self.view.layoutIfNeeded()
         })
 
@@ -112,28 +112,28 @@ class MapViewController: UIViewController,MKMapViewDelegate {
     func showInstructionPinsWithInstructions() {
         if !updatingEnabled || (!updatingEnabled && !editorEnabled) {
             self.notebuttonBottomVerticalSpaceConstraint.constant = positionShitMin
-            self.InstructionBottomButton.setTitle(DRAG_PINS_TO_UPDATE_LOCATIOM, forState: .Normal)
+            self.InstructionBottomButton.setTitle(DRAG_PINS_TO_UPDATE_LOCATIOM, for: UIControlState())
         } else {
-            self.InstructionBottomButton.setTitle(TAP_PINS_TO_DELETE, forState: .Normal)
+            self.InstructionBottomButton.setTitle(TAP_PINS_TO_DELETE, for: UIControlState())
             self.notebuttonBottomVerticalSpaceConstraint.constant = -positionShitMax
         }
-        UIView.animateWithDuration(0.15, animations: { () -> Void in
+        UIView.animate(withDuration: 0.15, animations: { () -> Void in
             self.view.layoutIfNeeded()
         })
 
     }
     func fetchAllPins() -> [Pin] {
-        let error: NSErrorPointer = nil
+        let error: NSErrorPointer? = nil
 
         // Create the Fetch Request
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        let fetchRequest = NSFetchRequest<Pin>(entityName: "Pin")
 
         // Execute the Fetch Request
         let results: [AnyObject]?
         do {
-            results = try sharedContext.executeFetchRequest(fetchRequest)
+            results = try sharedContext.fetch(fetchRequest)
         } catch let error1 as NSError {
-            error.memory = error1
+            error??.pointee = error1
             results = nil
         }
 
@@ -146,8 +146,8 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         return results as! [Pin]
     }
 
-    func addAnnotationInDB(annotation: MKPointAnnotation) {
-       let pin = Pin(dictionary: ["lat":annotation.coordinate.latitude,"lon":annotation.coordinate.longitude], context: self.sharedContext)
+    func addAnnotationInDB(_ annotation: MKPointAnnotation) {
+       let pin = Pin(dictionary: ["lat":annotation.coordinate.latitude as AnyObject,"lon":annotation.coordinate.longitude as AnyObject], context: self.sharedContext)
         _pins.append(pin)
 
         CoreDataStackManager.sharedInstance().saveContext()
@@ -155,23 +155,23 @@ class MapViewController: UIViewController,MKMapViewDelegate {
         enableNavBarButtonsIfNeeded(true,force: false)
     }
 
-    func handleLongPress(getstureRecognizer : UIGestureRecognizer){
-        if getstureRecognizer.state != .Began { return }
+    func handleLongPress(_ getstureRecognizer : UIGestureRecognizer){
+        if getstureRecognizer.state != .began { return }
 
-        let touchPoint = getstureRecognizer.locationInView(self.mapView)
-        let touchMapCoordinate = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
+        let touchPoint = getstureRecognizer.location(in: self.mapView)
+        let touchMapCoordinate = mapView.convert(touchPoint, toCoordinateFrom: mapView)
 
         let annotation = MKPointAnnotation()
 
         annotation.coordinate = touchMapCoordinate
-        UIView.animateWithDuration(0.25, animations: { () -> Void in
+        UIView.animate(withDuration: 0.25, animations: { () -> Void in
             self.mapView.addAnnotation(annotation)
         })
         self.addAnnotationInDB(annotation)
     }
 
 
-    func getPinObjectForAnnotation(annotation:MKAnnotation?) -> Pin? {
+    func getPinObjectForAnnotation(_ annotation:MKAnnotation?) -> Pin? {
         _pins = fetchAllPins()
         for pino in _pins {
             let numberofplaces: Float = 8.0
@@ -192,39 +192,39 @@ class MapViewController: UIViewController,MKMapViewDelegate {
 
 //MARK: MapView Delegate
 extension MapViewController {
-    func roundFloatToDecimal(decimal: Float, numberOfPlaces: Float) -> Float {
+    func roundFloatToDecimal(_ decimal: Float, numberOfPlaces: Float) -> Float {
         let numberOfPlaces = numberOfPlaces
         let multiplier = pow(10.0, numberOfPlaces)
         let mul = decimal * multiplier
         let rounded = round(mul) / multiplier
         return rounded
     }
-    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+    @objc(mapView:viewForAnnotation:) func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
              let identifier = "pin"
             var view: MKPinAnnotationView
-            if let dequeuedView = mapView.dequeueReusableAnnotationViewWithIdentifier(identifier)
+            if let dequeuedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
                 as? MKPinAnnotationView { // 2
                     dequeuedView.annotation = annotation
                     view = dequeuedView
-                    view.draggable = true
+                    view.isDraggable = true
             } else {
                 // 3
                 view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
                 view.animatesDrop = true
-                view.draggable = true
+                view.isDraggable = true
             }
             return view
      }
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView,
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView,
         calloutAccessoryControlTapped control: UIControl) {
     }
-    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+    @objc(mapView:didSelectAnnotationView:) func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         if updatingEnabled {
             return
         }
         if editorEnabled {
             if let pin = getPinObjectForAnnotation(view.annotation) {
-                sharedContext.deleteObject(pin)
+                sharedContext.delete(pin)
             }
             mapView.removeAnnotation(view.annotation!)
             do {
@@ -232,37 +232,37 @@ extension MapViewController {
             } catch _ {
             }
         } else {
-            let photosViewController: PhotosViewController? = self.storyboard?.instantiateViewControllerWithIdentifier("PhotosViewController") as? PhotosViewController
+            let photosViewController: PhotosViewController? = self.storyboard?.instantiateViewController(withIdentifier: "PhotosViewController") as? PhotosViewController
             photosViewController?.currentannotation = view.annotation
             photosViewController?.currentPin = getPinObjectForAnnotation(view.annotation)
             self.navigationController?.pushViewController(photosViewController! as UIViewController, animated: true)
         }
         mapView.deselectAnnotation(view.annotation, animated: true)
     }
-    func mapView(mapView: MKMapView, didDeselectAnnotationView view: MKAnnotationView) {
+    @objc(mapView:didDeselectAnnotationView:) func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
 
     }
 
-    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         _ = 40075160 * cos(self.mapView.region.center.latitude * M_PI / 180)
         let parameters = [
             Map.Keys.latDistance: mapView.region.span.latitudeDelta  ,
             Map.Keys.lonDistance: mapView.region.span.longitudeDelta ,
             Map.Keys.centerX:Float(mapView.region.center.latitude),
             Map.Keys.centerY:Float(mapView.region.center.longitude)
-        ]
-        _ = Map(dictionary: parameters as! [String : AnyObject], context: sharedContext)
+        ] as [String : Any]
+        _ = Map(dictionary: parameters as [String : AnyObject], context: sharedContext)
         CoreDataStackManager.sharedInstance().saveContext()
 
     }
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+    @objc(mapView:annotationView:didChangeDragState:fromOldState:) func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, didChange newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
         var pin:Pin
-        if newState == MKAnnotationViewDragState.Starting {
+        if newState == MKAnnotationViewDragState.starting {
             //Get the pin for the annotation
             pin = getPinObjectForAnnotation(view.annotation)!
         }
-        if newState == MKAnnotationViewDragState.Ending {
-            pin = Pin(dictionary: ["lat":view.annotation!.coordinate.latitude,"lon":view.annotation!.coordinate.longitude], context: self.sharedContext)
+        if newState == MKAnnotationViewDragState.ending {
+            pin = Pin(dictionary: ["lat":view.annotation!.coordinate.latitude as AnyObject,"lon":view.annotation!.coordinate.longitude as AnyObject], context: self.sharedContext)
             pin.photos = NSSet() //reset photos
             pin.isPhotosDownloaded = false
             pin.isPinMoved = true
@@ -275,16 +275,16 @@ extension MapViewController {
     }
 
 
-    @IBAction func updatePinsLocation(sender: UIBarButtonItem) {
+    @IBAction func updatePinsLocation(_ sender: UIBarButtonItem) {
         showInstructionPinsWithInstructions()
         if !updatingEnabled {
             updatePinsBarButton.title = "Done"
-            editBarButton.enabled = false // no editting while updating
+            editBarButton.isEnabled = false // no editting while updating
             editorEnabled = false
 
         }else {
             updatePinsBarButton.title = "Update Pins"
-            editBarButton.enabled = true // no editting while updating
+            editBarButton.isEnabled = true // no editting while updating
 
         }
         updatingEnabled = !updatingEnabled

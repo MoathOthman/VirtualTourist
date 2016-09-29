@@ -9,10 +9,10 @@
 import UIKit
 
 class VLTFlickerClient: NSObject {
-    typealias CommonAPICompletionHandler =  (response: AnyObject?,error : NSError?) -> Void
+    typealias CommonAPICompletionHandler =  (_ response: AnyObject?,_ error : NSError?) -> Void
 
     /* Shared session */
-    var session: NSURLSession
+    var session: URLSession
 
     /* Configuration object */
 
@@ -21,14 +21,14 @@ class VLTFlickerClient: NSObject {
     var userID : String? = nil
     var isLoggedIn: Bool {
         get{
-            return NSUserDefaults.standardUserDefaults().boolForKey("isLoggedIn");
+            return UserDefaults.standard.bool(forKey: "isLoggedIn");
         }
         set {
-            NSUserDefaults.standardUserDefaults().setBool(newValue, forKey: "isLoggedIn")
+            UserDefaults.standard.set(newValue, forKey: "isLoggedIn")
         }
     }
     override init() {
-        session = NSURLSession.sharedSession()
+        session = URLSession.shared
         super.init()
     }
 
@@ -37,23 +37,23 @@ class VLTFlickerClient: NSObject {
 
    
 
-    func taskForMethodParameters(parameters: [String : AnyObject], completionHandler: CommonAPICompletionHandler) -> NSURLSessionDataTask {
+    func taskForMethodParameters(_ parameters: [String : AnyObject], completionHandler: @escaping CommonAPICompletionHandler) -> URLSessionDataTask {
 
         /* 1. Set the parameters */
         let mutableParameters = parameters
 
         /* 2/3. Build the URL and configure the request */
         let urlString = Constants.BaseURL + VLTFlickerClient.escapedParameters(mutableParameters)
-        let url = NSURL(string: urlString)!
-        let request = NSURLRequest(URL: url)
+        let url = URL(string: urlString)!
+        let request = URLRequest(url: url)
 
         /* 4. Make the request */
-        let task = session.dataTaskWithRequest(request) {data, response, downloadError in
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+        let task = session.dataTask(with: request, completionHandler: {data, response, downloadError in
+            DispatchQueue.main.async(execute: { () -> Void in
                 /* 5/6. Parse the data and use the data (happens in completion handler) */
                 if let error = downloadError {
-                    _ = VLTFlickerClient.errorForData(data, response: response, error: error)
-                    completionHandler(response: nil, error: downloadError)
+                    _ = VLTFlickerClient.errorForData(data, response: response, error: error as NSError)
+                    completionHandler(nil, downloadError as NSError?)
                 } else {
                     let newData = data
 
@@ -61,7 +61,7 @@ class VLTFlickerClient: NSObject {
                 }
             })
 
-        }
+        }) 
 
         /* 7. Start the request */
         task.resume()
@@ -72,31 +72,31 @@ class VLTFlickerClient: NSObject {
 
     // MARK: - GET
 
-    func taskForGETMethod(method: String, parameters: [String : AnyObject], completionHandler: CommonAPICompletionHandler) -> NSURLSessionDataTask {
+    func taskForGETMethod(_ method: String, parameters: [String : AnyObject], completionHandler: @escaping CommonAPICompletionHandler) -> URLSessionDataTask {
 
         /* 1. Set the parameters */
         let mutableParameters = parameters
 
         /* 2/3. Build the URL and configure the request */
         let urlString = Constants.BaseURLSecure + method + VLTFlickerClient.escapedParameters(mutableParameters)
-        let url = NSURL(string: urlString)!
-        let request = NSURLRequest(URL: url)
+        let url = URL(string: urlString)!
+        let request = URLRequest(url: url)
 
         /* 4. Make the request */
-        let task = session.dataTaskWithRequest(request) {data, response, downloadError in
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+        let task = session.dataTask(with: request, completionHandler: {data, response, downloadError in
+            DispatchQueue.main.async(execute: { () -> Void in
                 /* 5/6. Parse the data and use the data (happens in completion handler) */
                 if let error = downloadError {
-                    _ = VLTFlickerClient.errorForData(data, response: response, error: error)
-                    completionHandler(response: nil, error: downloadError)
+                    _ = VLTFlickerClient.errorForData(data, response: response, error: error as NSError)
+                    completionHandler(nil, downloadError as NSError?)
                 } else {
-                    let newData = data!.subdataWithRange(NSMakeRange(5, data!.length - 5)) /* subset response data! */
+                    let newData = data!.subdata(in: 5..<(data!.count - 5)) /* subset response data! */
 
                     VLTFlickerClient.parseJSONWithCompletionHandler(newData, completionHandler: completionHandler)
                 }
             })
 
-        }
+        }) 
 
         /* 7. Start the request */
         task.resume()
@@ -107,42 +107,42 @@ class VLTFlickerClient: NSObject {
 
     // MARK: - POST
 
-    func taskForPOSTMethod(method: String, parameters: [String : AnyObject], jsonBody: [String:AnyObject], completionHandler: CommonAPICompletionHandler) -> NSURLSessionDataTask {
+    func taskForPOSTMethod(_ method: String, parameters: [String : AnyObject], jsonBody: [String:AnyObject], completionHandler: @escaping CommonAPICompletionHandler) -> URLSessionDataTask {
 
         /* 1. Set the parameters */
         var mutableParameters = parameters
-        mutableParameters[ParameterKeys.ApiKey] = Constants.ApiKey
+        mutableParameters[ParameterKeys.ApiKey] = Constants.ApiKey as AnyObject?
 
         /* 2/3. Build the URL and configure the request */
         let urlString = Constants.BaseURLSecure + method + VLTFlickerClient.escapedParameters(mutableParameters)
-        let url = NSURL(string: urlString)!
-        let request = NSMutableURLRequest(URL: url)
-        request.HTTPMethod = "POST"
+        let url = URL(string: urlString)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         do {
-            request.HTTPBody = try NSJSONSerialization.dataWithJSONObject(jsonBody, options: [])
+            request.httpBody = try JSONSerialization.data(withJSONObject: jsonBody, options: [])
         } catch _ as NSError {
-             request.HTTPBody = nil
+             request.httpBody = nil
         }
 
         /* 4. Make the request */
-        let task = session.dataTaskWithRequest(request) {data, response, downloadError in
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+        let task = session.dataTask(with: request) { (data, response, downloadError) in
+            DispatchQueue.main.async(execute: { () -> Void in
                 /* 5/6. Parse the data and use the data (happens in completion handler) */
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                DispatchQueue.main.async(execute: { () -> Void in
                     if let error = downloadError {
-                        _ = VLTFlickerClient.errorForData(data, response: response, error: error)
-                        completionHandler(response: nil, error: downloadError)
+                        _ = VLTFlickerClient.errorForData(data, response: response, error: error as NSError)
+                        completionHandler(nil, downloadError as NSError?)
                     } else {
-                        let newData = data!.subdataWithRange(NSMakeRange(5, data!.length - 5)) /* subset response data! */
+                        let newData = data!.subdata(in:  5..<(data!.count - 5)) /* subset response data! */
                         VLTFlickerClient.parseJSONWithCompletionHandler(newData, completionHandler: completionHandler)
                     }
                 })
-
+                
             })
-
         }
+       
 
         /* 7. Start the request */
         task.resume()
@@ -153,18 +153,18 @@ class VLTFlickerClient: NSObject {
     // MARK: - Helpers
 
     /* Helper: Substitute the key for the value that is contained within the method name */
-    class func subtituteKeyInMethod(method: String, key: String, value: String) -> String? {
-        if method.rangeOfString("{\(key)}") != nil {
-            return method.stringByReplacingOccurrencesOfString("{\(key)}", withString: value)
+    class func subtituteKeyInMethod(_ method: String, key: String, value: String) -> String? {
+        if method.range(of: "{\(key)}") != nil {
+            return method.replacingOccurrences(of: "{\(key)}", with: value)
         } else {
             return nil
         }
     }
 
     /* Helper: Given a response with error, see if a status_message is returned, otherwise return the previous error */
-    class func errorForData(data: NSData?, response: NSURLResponse?, error: NSError) -> NSError {
+    class func errorForData(_ data: Data?, response: URLResponse?, error: NSError) -> NSError {
 
-        if let parsedResult = (try? NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments)) as? [String : AnyObject] {
+        if let parsedResult = (try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)) as? [String : AnyObject] {
 
             if let errorMessage = parsedResult[VLTFlickerClient.JSONResponseKeys.StatusMessage] as? String {
 
@@ -178,27 +178,27 @@ class VLTFlickerClient: NSObject {
     }
 
     /* Helper: Given raw JSON, return a usable Foundation object */
-    class func parseJSONWithCompletionHandler(data: NSData, completionHandler: CommonAPICompletionHandler) {
+    class func parseJSONWithCompletionHandler(_ data: Data, completionHandler: CommonAPICompletionHandler) {
 
         var parsingError: NSError? = nil
 
-        let parsedResult: AnyObject?
+        let parsedResult: Any?
         do {
-            parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
+            parsedResult = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments)
         } catch let error as NSError {
             parsingError = error
             parsedResult = nil
         }
 
         if let error = parsingError {
-            completionHandler(response: nil, error: error)
+            completionHandler(nil, error)
         } else {
-            completionHandler(response: parsedResult, error: nil)
+            completionHandler(parsedResult as AnyObject?, nil)
         }
     }
 
     /* Helper function: Given a dictionary of parameters, convert to a string for a url */
-    class func escapedParameters(parameters: [String : AnyObject]) -> String {
+    class func escapedParameters(_ parameters: [String : AnyObject]) -> String {
 
         var urlVars = [String]()
 
@@ -208,14 +208,14 @@ class VLTFlickerClient: NSObject {
             let stringValue = "\(value)"
 
             /* Escape it */
-            let escapedValue = stringValue.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet())
+            let escapedValue = stringValue.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)
             
             /* Append it */
             urlVars += [key + "=" + "\(escapedValue!)"]
             
         }
         
-        return (!urlVars.isEmpty ? "?" : "") + urlVars.joinWithSeparator("&")
+        return (!urlVars.isEmpty ? "?" : "") + urlVars.joined(separator: "&")
     }
     
     // MARK: - Shared Instance
@@ -246,7 +246,7 @@ extension VLTFlickerClient {
         static let BaseURL : String = "https://api.flickr.com/services/rest/"
         static let BaseURLSecure : String = "https://www.udacity.com/api/"
         static let AuthorizationURL : String = "https://www.themoviedb.org/authenticate/"
-        static let signUpWebURL: NSURL?  = NSURL(string: "https://www.google.com/url?q=https%3A%2F%2Fwww.udacity.com%2Faccount%2Fauth%23!%2Fsignin&sa=D&sntz=1&usg=AFQjCNERmggdSkRb9MFkqAW_5FgChiCxAQ")
+        static let signUpWebURL: URL?  = URL(string: "https://www.google.com/url?q=https%3A%2F%2Fwww.udacity.com%2Faccount%2Fauth%23!%2Fsignin&sa=D&sntz=1&usg=AFQjCNERmggdSkRb9MFkqAW_5FgChiCxAQ")
     }
 
     // MARK: - Methods

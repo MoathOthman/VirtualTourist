@@ -9,6 +9,26 @@
 import UIKit
 import MapKit
 import CoreData
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 let NO_PIN_IMAGES = "This pin has no images"
 let DELETE_SELECTED_PHOTOS = "Remove Selected Pictures"
 let NEW_COLLECTION = "New Collection"
@@ -18,8 +38,8 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
     var currentPin: Pin?
     var photos = [Photo]()
     let sharedContext = CoreDataStackManager.sharedInstance().managedObjectContext!
-    var blockOperations: [NSBlockOperation] = [NSBlockOperation]()
-    var indicesSelected = [NSIndexPath:Photo]()
+    var blockOperations: [BlockOperation] = [BlockOperation]()
+    var indicesSelected = [IndexPath:Photo]()
     //MARK: Outlets
     @IBOutlet weak var photosAlbumCollectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
@@ -33,16 +53,16 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
         mapView.addAnnotation(currentannotation!)
         if currentPin?.photos.count > 0 {
             //get from db
-            self.bottomActionbarButton.enabled = true
+            self.bottomActionbarButton.isEnabled = true
         } else {
             //case: when downloading images already done with no images
             if currentPin?.isPhotosDownloaded == true {
-                noteLabel.hidden = false
+                noteLabel.isHidden = false
             }
             
         }
 
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(PhotosViewController.photosHaveBeenFetched(_:)), name: FETCHING_PHOTOS_FOR_PIN, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(PhotosViewController.photosHaveBeenFetched(_:)), name: NSNotification.Name(rawValue: FETCHING_PHOTOS_FOR_PIN), object: nil)
 
         collectionView.allowsMultipleSelection = true
 
@@ -61,32 +81,31 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
         self.navigationController?.navigationBar.topItem?.backBarButtonItem = backbutton
 
     }
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         let clocation = CLLocation(latitude: currentannotation!.coordinate.latitude, longitude: currentannotation!.coordinate.longitude)
         centerMapOnLocation(clocation)
     }
-    func photosHaveBeenFetched(notification: NSNotification) {
-        let object: AnyObject?  = notification.object
-        let err: Int? = object?.valueForKey("error") as? Int
-        let finished = object?.valueForKey("finished") as? Int
+    func photosHaveBeenFetched(_ notification: Notification) {
+        let object: AnyObject?  = notification.object as AnyObject?
+        let err: Int? = object?.value(forKey: "error") as? Int
+        let finished = object?.value(forKey: "finished") as? Int
 
-        if let erro = err where erro == 1 && finished == 1 {
-            noteLabel.hidden = false
+        if let erro = err , erro == 1 && finished == 1 {
+            noteLabel.isHidden = false
         } else {
-            noteLabel.hidden = true
+            noteLabel.isHidden = true
         }
-        self.bottomActionbarButton.enabled = true
+        self.bottomActionbarButton.isEnabled = true
 
     }
 
-    lazy var fetchedResultsController: NSFetchedResultsController = {
-
-        let fetchRequest = NSFetchRequest(entityName: "Photo")
-
+    lazy var fetchedResultsController: NSFetchedResultsController<Photo>  = {
+        let fetchRequest =  NSFetchRequest<Photo>(entityName: "Photo")
+ 
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         fetchRequest.predicate = NSPredicate(format: "pin == %@", self.currentPin!);
 
-        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+        let fetchedResultsController = NSFetchedResultsController<Photo>(fetchRequest: fetchRequest,
             managedObjectContext: self.sharedContext,
             sectionNameKeyPath: nil,
             cacheName: nil)
@@ -96,7 +115,7 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
         }()
 
     //MARK: New Collection button
-    @IBAction func bottomBarButtonTapped(sender: UIBarButtonItem) {
+    @IBAction func bottomBarButtonTapped(_ sender: UIBarButtonItem) {
         if isThereAnySelectedPhoto() {
             deleteCells(UIButton())
         } else {
@@ -104,13 +123,13 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
 //            unHighLighAll()
             cancelAllImagesDownloadTasks()
             deleteAllPhotos()
-            self.bottomActionbarButton.enabled = false
+            self.bottomActionbarButton.isEnabled = false
             VLTPhotosFetcher.fetchPhotosForPin(self.currentPin!, context: sharedContext)
             
         }
     }
 
-    func centerMapOnLocation(location: CLLocation) {
+    func centerMapOnLocation(_ location: CLLocation) {
         let regionRadius: CLLocationDistance = 10000
         let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate,
             regionRadius , regionRadius )
@@ -119,10 +138,10 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
 
 
     //MARK: MapView Delegate
-    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
              let identifier = "pin"
             var view: MKPinAnnotationView
-            if let dequeuedView = mapView.dequeueReusableAnnotationViewWithIdentifier(identifier)
+            if let dequeuedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
                 as? MKPinAnnotationView { // 2
                     dequeuedView.annotation = annotation
                     view = dequeuedView
@@ -138,11 +157,11 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
 
     deinit {
         // Cancel all block operations when VC deallocates
-        for operation: NSBlockOperation in blockOperations {
+        for operation: BlockOperation in blockOperations {
             operation.cancel()
         }
 
-        blockOperations.removeAll(keepCapacity: false)
+        blockOperations.removeAll(keepingCapacity: false)
     }
 
 
@@ -151,17 +170,17 @@ class PhotosViewController: UIViewController,MKMapViewDelegate, UICollectionView
 }
 //MARK: UICollectionViewDelegateFlowLayout - orientation
 extension PhotosViewController {
-    override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
-        coordinator.animateAlongsideTransition({ (UIViewControllerTransitionCoordinatorContext) -> Void in
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: { (UIViewControllerTransitionCoordinatorContext) -> Void in
             self.collectionView.performBatchUpdates(nil, completion: { (bo) -> Void in
             })
             }, completion: { (UIViewControllerTransitionCoordinatorContext) -> Void in
                 print("rotation completed")
         })
-        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
+        super.viewWillTransition(to: size, with: coordinator)
     }
-    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
-        let size = CGSizeMake(UIScreen.mainScreen().bounds.size.width/3 - 7.5, UIScreen.mainScreen().bounds.size.width/3 - 7.5) ;
+    @objc(collectionView:layout:sizeForItemAtIndexPath:) func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let size = CGSize(width: UIScreen.main.bounds.size.width/3 - 7.5, height: UIScreen.main.bounds.size.width/3 - 7.5) ;
         return size
     }
 
@@ -175,8 +194,8 @@ extension PhotosViewController {
         let count = countOfEntities()
         if count == 0 {return}
 
-        for i  in collectionView.indexPathsForVisibleItems() {
-            let cell = collectionView.cellForItemAtIndexPath(i ) as! VLTPhotoCollectionViewCell
+        for i  in collectionView.indexPathsForVisibleItems {
+            let cell = collectionView.cellForItem(at: i ) as! VLTPhotoCollectionViewCell
             cell.taskToCancelifCellIsReused = cell.task
         }
 
@@ -186,24 +205,24 @@ extension PhotosViewController {
         let count = countOfEntities()
         if count == 0 {return}
         for i  in 0...countOfEntities()-1 {
-            let photo = fetchedResultsController.objectAtIndexPath(NSIndexPath(forRow: i, inSection: 0)) as! Photo
+            let photo = fetchedResultsController.object(at: IndexPath(row: i, section: 0))
             deletePhoto(photo)
         }
         CoreDataStackManager.sharedInstance().saveContext()
     }
-    func deletePhoto(_photo: Photo) {
-        self.sharedContext.deleteObject(_photo)
+    func deletePhoto(_ _photo: Photo) {
+        self.sharedContext.delete(_photo)
     }
     func countOfEntities() -> Int {
         let context = sharedContext
-        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        let fetchRequest = NSFetchRequest<Photo>(entityName: "Photo")
         fetchRequest.predicate = NSPredicate(format: "pin == %@", self.currentPin!);
-        let count = context.countForFetchRequest(fetchRequest, error: nil)
+        let count = try! context.count(for: fetchRequest)
         return count
     }
 
-    func photoForIndex(indexPath: NSIndexPath) -> Photo {
-        return fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+    func photoForIndex(_ indexPath: IndexPath) -> Photo {
+        return fetchedResultsController.object(at: indexPath)
     }
 
     

@@ -22,7 +22,7 @@ extension MKMapView {
         return  log2(zoom) + 1.0;
     }
 
-    func setCenterCoordinate(centerCoordinate: CLLocationCoordinate2D, zoomLevel :Float, animated: Bool) {
+    func setCenterCoordinate(_ centerCoordinate: CLLocationCoordinate2D, zoomLevel :Float, animated: Bool) {
         let lonDis = Double(360.0 / pow(2, zoomLevel)) * Double(self.frame.size.width / 256.0)
         let span: MKCoordinateSpan = MKCoordinateSpanMake(0,lonDis);
         self.setRegion(MKCoordinateRegionMake(centerCoordinate, span), animated: animated)

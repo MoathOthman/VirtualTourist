@@ -25,14 +25,14 @@ class Photo: NSManagedObject {
     @NSManaged var id: String
     @NSManaged var pin: Pin
 
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+    override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertInto: context)
     }
 
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
 
-        let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
-        super.init(entity: entity,insertIntoManagedObjectContext: context)
+        let entity =  NSEntityDescription.entity(forEntityName: "Photo", in: context)!
+        super.init(entity: entity,insertInto: context)
         title = dictionary[Keys.Title] as! String
         id = dictionary[Keys.ID] as! String
         url_m = (dictionary[Keys.ImagePath] as? String)!
@@ -47,9 +47,9 @@ class Photo: NSManagedObject {
     }
     override func prepareForDeletion() {
         let path = ImageCache.sharedInstance().pathForIdentifier((self.url_m as NSString).lastPathComponent)
-        if NSFileManager.defaultManager().fileExistsAtPath(path) {
+        if FileManager.default.fileExists(atPath: path) {
             do {
-                try NSFileManager.defaultManager().removeItemAtPath(path)
+                try FileManager.default.removeItem(atPath: path)
             } catch _ {
             }
         }

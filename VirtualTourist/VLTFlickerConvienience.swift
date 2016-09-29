@@ -14,14 +14,14 @@ let EXTRAS = "url_m"
 let DATA_FORMAT = "json"
 let NO_JSON_CALLBACK = "1"
 var randomindex: Int = -1
-
+// Session
 extension VLTFlickerClient {
 
-    func getphotosOfLocation(latitude: Float,longitude: Float, completionHandler: CommonAPICompletionHandler) {
+    func getphotosOfLocation(_ latitude: Float,longitude: Float, completionHandler: @escaping CommonAPICompletionHandler) {
         getphotosOfLocation(latitude, longitude: longitude, page: 1, completionHandler: completionHandler)
     }
 
-    func getphotosOfLocation(latitude: Float,longitude: Float,page: Int, completionHandler: CommonAPICompletionHandler) {
+    func getphotosOfLocation(_ latitude: Float,longitude: Float,page: Int, completionHandler: @escaping CommonAPICompletionHandler) {
         let methodArguments = [
             "method": VLTFlickerClient.Methods.search,
             "api_key": VLTFlickerClient.Constants.ApiKey,
@@ -35,15 +35,16 @@ extension VLTFlickerClient {
             "page":page,
             "per_page":20,
             "sort": randomSorting(),
-        ]
+        ] as [String : Any]
 
-        taskForMethodParameters(methodArguments as! [String : AnyObject], completionHandler: { (response, error) -> Void in
+        taskForMethodParameters(methodArguments as [String : AnyObject], completionHandler: { (response, error) -> Void in
             print("response is \(response)", terminator: "" )
 
-            if let photosDictionary = response!.valueForKey("photos") as? [String:AnyObject] {
+            if let photosDictionary = response!.value(forKey: "photos") as? [String:AnyObject] {
 
                 if let photos = photosDictionary["photo"] as? [AnyObject], let pages = photosDictionary["pages"] as? Int {
-                    completionHandler(response: ["photos":photos,"pages":pages], error: nil)
+                    completionHandler(["photos":photos,"pages":pages] as AnyObject?, nil)
+                    
                 } else {
                     print("Cant find key 'pages' in \(photosDictionary)")
                 }
@@ -55,21 +56,21 @@ extension VLTFlickerClient {
     }
 
 
-    func taskForImageWithURL(url: String, completionHandler: (imageData: NSData?, error: NSError?) ->  Void) -> NSURLSessionTask {
+    func taskForImageWithURL(_ url: String, completionHandler: @escaping (_ imageData: Data?, _ error: NSError?) ->  Void) -> URLSessionTask {
 
-         let url = NSURL(string: url)!
+         let url = URL(string: url)!
          print(url)
 
-        let request = NSURLRequest(URL: url)
+        let request = URLRequest(url: url)
 
-        let task = session.dataTaskWithRequest(request) {data, response, downloadError in
+        let task = session.dataTask(with: request, completionHandler: {data, response, downloadError in
 
             if let error = downloadError {
-                completionHandler(imageData: nil, error: error)
+                completionHandler(nil, error as NSError?)
             } else {
-                completionHandler(imageData: data, error: nil)
+                completionHandler(data, nil)
             }
-        }
+        }) 
 
         task.resume()
 

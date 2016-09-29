@@ -15,20 +15,20 @@ extension PhotosViewController {
 
     //MARK:CollectionView Datasource
 
-    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let sectionInfo = self.fetchedResultsController.sections![section] 
         if sectionInfo.numberOfObjects == 0 {
-            collectionView.backgroundColor = UIColor.clearColor()
+            collectionView.backgroundColor = UIColor.clear
         }else {
-            collectionView.backgroundColor = UIColor.whiteColor()
+            collectionView.backgroundColor = UIColor.white
         }
 
         return sectionInfo.numberOfObjects
 
     }
-    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+    @objc(collectionView:cellForItemAtIndexPath:) func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let CellIdentifier = "photoCell"
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as! VLTPhotoCollectionViewCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CellIdentifier, for: indexPath) as! VLTPhotoCollectionViewCell
         configureCell(cell, photo: photoForIndex(indexPath))
 
         let coverView: UIView = cell.contentView.viewWithTag(2)!
@@ -41,7 +41,7 @@ extension PhotosViewController {
     }
 
     
-    func configureCell(cell: VLTPhotoCollectionViewCell, photo: Photo) {
+    func configureCell(_ cell: VLTPhotoCollectionViewCell, photo: Photo) {
         let imageView = cell.contentView.viewWithTag(1) as! UIImageView
         let animator = cell.contentView.viewWithTag(3) as! UIActivityIndicatorView
 
@@ -63,7 +63,7 @@ extension PhotosViewController {
                 if let data = imageData {
                     // Craete the image
                     let image = UIImage(data: data)
-                    dispatch_async(dispatch_get_main_queue()) {
+                    DispatchQueue.main.async {
                         photo.image = image 
                         imageView.image = image
                         animator.stopAnimating()
@@ -79,25 +79,25 @@ extension PhotosViewController {
 
 
     //MARK: CollectionView Delegate
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+    @objc(collectionView:didSelectItemAtIndexPath:) func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         bottomActionbarButton.title = DELETE_SELECTED_PHOTOS
         if checkIfPhotoIsAlreadySelected(indexPath) {
-            indicesSelected.removeValueForKey(indexPath)
+            indicesSelected.removeValue(forKey: indexPath)
         } else {
             indicesSelected[indexPath] = self.photoForIndex(indexPath)
         }
-        collectionView.reloadItemsAtIndexPaths([indexPath])
+        collectionView.reloadItems(at: [indexPath])
     }
-    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
+    @objc(collectionView:didDeselectItemAtIndexPath:) func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
 //        highlightCell(indexPath, flag: !checkIfPhotoIsAlreadySelected(indexPath))
     }
-    func collectionView(collectionView: UICollectionView, shouldHighlightItemAtIndexPath indexPath: NSIndexPath) -> Bool {
+    @objc(collectionView:shouldHighlightItemAtIndexPath:) func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
         return true
     }
 
     //MARK: heighlight cells
-    func highlightCell(indexPath : NSIndexPath, flag: Bool) {
-        let cell = collectionView.cellForItemAtIndexPath(indexPath)
+    func highlightCell(_ indexPath : IndexPath, flag: Bool) {
+        let cell = collectionView.cellForItem(at: indexPath)
         let coverView: UIView = cell!.contentView.viewWithTag(2)!
         if flag {
             coverView.backgroundColor = UIColor(white: 0.8, alpha: 0.9)
@@ -109,9 +109,9 @@ extension PhotosViewController {
         }
 
     }
-    func checkIfPhotoIsAlreadySelected(indx: NSIndexPath) -> Bool {
+    func checkIfPhotoIsAlreadySelected(_ indx: IndexPath) -> Bool {
         for foto in indicesSelected.keys {
-            if foto == indx {
+            if foto as IndexPath == indx {
                 return true
             }
         }
@@ -125,26 +125,26 @@ extension PhotosViewController {
     }
     func unHighLighAll() {
         for i in 0...countOfEntities() {
-            collectionView.reloadItemsAtIndexPaths([NSIndexPath(index: i)])
+            collectionView.reloadItems(at: [IndexPath(index: i)])
         }
     }
 
-    func deleteCells(sender: AnyObject) {
+    func deleteCells(_ sender: AnyObject) {
 
         var deletedPhotos:[Photo] = []
 
         let indexpaths = indicesSelected.keys
 
         for item  in indexpaths {
-                _ = collectionView!.cellForItemAtIndexPath(item  )
-                collectionView?.deselectItemAtIndexPath(item  , animated: true)
+                _ = collectionView!.cellForItem(at: item as IndexPath  )
+                collectionView?.deselectItem(at: item as IndexPath  , animated: true)
                 // fruits for section
                 let sectionfruits = indicesSelected[item]
                 deletedPhotos.append(sectionfruits!)
                 deletePhoto(indicesSelected[item]!)
-                indicesSelected.removeValueForKey(item)
+                indicesSelected.removeValue(forKey: item)
 //                highlightCell(item as! NSIndexPath , flag: false)
-                collectionView.reloadItemsAtIndexPaths([item])
+                collectionView.reloadItems(at: [item as IndexPath])
             }
 
             bottomActionbarButton.title = NEW_COLLECTION

@@ -26,32 +26,32 @@ class Map: NSManagedObject {
     @NSManaged var centerX: NSNumber
     @NSManaged var centerY: NSNumber
 
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+    override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertInto: context)
     }
 
  
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
-        let entity =  NSEntityDescription.entityForName("Map", inManagedObjectContext: context)!
-        super.init(entity: entity,insertIntoManagedObjectContext: context)
+        let entity =  NSEntityDescription.entity(forEntityName: "Map", in: context)!
+        super.init(entity: entity,insertInto: context)
     
-        centerX = (dictionary[Keys.centerX] as? Float)!
-        centerY = (dictionary[Keys.centerY] as? Float)!
-        lonDistance = (dictionary[Keys.lonDistance] as? Float)!
-        latDistance = (dictionary[Keys.latDistance] as? Float)!
+        centerX =  dictionary[Keys.centerX] as! NSNumber
+        centerY =  dictionary[Keys.centerY] as! NSNumber
+        lonDistance =  dictionary[Keys.lonDistance] as! NSNumber
+        latDistance =  dictionary[Keys.latDistance] as! NSNumber
 
     }
 
-    class func fetchMapObject(context: NSManagedObjectContext) -> Map? {
-        let error: NSErrorPointer = nil
+    class func fetchMapObject(_ context: NSManagedObjectContext) -> Map? {
+        let error: NSErrorPointer? = nil
         // Create the Fetch Request
-        let fetchRequest = NSFetchRequest(entityName: "Map")
+        let fetchRequest = NSFetchRequest<Map>(entityName: "Map")
         // Execute the Fetch Request
         let results: [AnyObject]?
         do {
-            results = try context.executeFetchRequest(fetchRequest)
+            results = try context.fetch(fetchRequest)
         } catch let error1 as NSError {
-            error.memory = error1
+            error??.pointee = error1
             results = nil
         }
         // Check for Errors

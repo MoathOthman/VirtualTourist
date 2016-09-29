@@ -15,96 +15,92 @@ import CoreData
 extension PhotosViewController {
     // MARK: - Fetched Results Controller Delegate
 
-
-    // In the did change object method:
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
-
-        if type == NSFetchedResultsChangeType.Insert {
+    @objc(controller:didChangeObject:atIndexPath:forChangeType:newIndexPath:) func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        
+        if type == NSFetchedResultsChangeType.insert {
             print("Insert Object: \(newIndexPath)")
-
+            
             blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
+                BlockOperation(block: { [weak self] in
                     if let this = self {
-                        this.collectionView!.insertItemsAtIndexPaths([newIndexPath!])
+                        this.collectionView!.insertItems(at: [newIndexPath!])
                     }
                     })
             )
         }
-        else if type == NSFetchedResultsChangeType.Update {
+        else if type == NSFetchedResultsChangeType.update {
             print("Update Object: \(indexPath)")
             blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
+                BlockOperation(block: { [weak self] in
                     if let this = self {
-                        this.collectionView!.reloadItemsAtIndexPaths([indexPath!])
+                        this.collectionView!.reloadItems(at: [indexPath!])
                     }
                     })
             )
         }
-        else if type == NSFetchedResultsChangeType.Move {
+        else if type == NSFetchedResultsChangeType.move {
             print("Move Object: \(indexPath)")
-
+            
             blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
+                BlockOperation(block: { [weak self] in
                     if let this = self {
-                        this.collectionView!.moveItemAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
+                        this.collectionView!.moveItem(at: indexPath!, to: newIndexPath!)
                     }
                     })
             )
         }
-        else if type == NSFetchedResultsChangeType.Delete {
+        else if type == NSFetchedResultsChangeType.delete {
             print("Delete Object: \(indexPath)")
-
+            
             blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
+                BlockOperation(block: { [weak self] in
                     if let this = self {
-                        this.collectionView!.deleteItemsAtIndexPaths([indexPath!])
+                        this.collectionView!.deleteItems(at: [indexPath!])
                     }
                     })
             )
         }
     }
-
-    // In the did change section method:
-    func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
-
-        if type == NSFetchedResultsChangeType.Insert {
+    @objc(controller:didChangeSection:atIndex:forChangeType:) func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+        
+        if type == NSFetchedResultsChangeType.insert {
             print("Insert Section: \(sectionIndex)")
-
+            
             blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
+                BlockOperation(block: { [weak self] in
                     if let this = self {
-                        this.collectionView!.insertSections(NSIndexSet(index: sectionIndex))
+                        this.collectionView!.insertSections(IndexSet(integer: sectionIndex))
                     }
                     })
             )
         }
-        else if type == NSFetchedResultsChangeType.Update {
+        else if type == NSFetchedResultsChangeType.update {
             print("Update Section: \(sectionIndex)")
             blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
+                BlockOperation(block: { [weak self] in
                     if let this = self {
-                        this.collectionView!.reloadSections(NSIndexSet(index: sectionIndex))
+                        this.collectionView!.reloadSections(IndexSet(integer: sectionIndex))
                     }
                     })
             )
         }
-        else if type == NSFetchedResultsChangeType.Delete {
+        else if type == NSFetchedResultsChangeType.delete {
             print("Delete Section: \(sectionIndex)")
-
+            
             blockOperations.append(
-                NSBlockOperation(block: { [weak self] in
+                BlockOperation(block: { [weak self] in
                     if let this = self {
-                        this.collectionView!.deleteSections(NSIndexSet(index: sectionIndex))
+                        this.collectionView!.deleteSections(IndexSet(integer: sectionIndex))
                     }
                     })
             )
         }
     }
-
+    
     // And finally, in the did controller did change content method:
-    func controllerDidChangeContent(controller: NSFetchedResultsController) {
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         collectionView!.performBatchUpdates({ () -> Void in
-            for operation: NSBlockOperation in self.blockOperations {
+            for operation: BlockOperation in self.blockOperations {
                 operation.start()
             }
             }, completion: { (finished) -> Void in

@@ -26,18 +26,18 @@ class Pin: NSManagedObject {
     @NSManaged var totalPages: NSNumber
     @NSManaged var isPinMoved: NSNumber
 
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+    override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertInto: context)
     }
 
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
 
-        let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
+        let entity =  NSEntityDescription.entity(forEntityName: "Pin", in: context)!
 
-        super.init(entity: entity,insertIntoManagedObjectContext: context)
+        super.init(entity: entity,insertInto: context)
 
-        lat = dictionary[Keys_PIN.Lat] as! Float
-        lon = dictionary[Keys_PIN.Lon] as! Float
+        lat =  dictionary[Keys_PIN.Lat] as! NSNumber
+        lon =  dictionary[Keys_PIN.Lon] as! NSNumber
     }
 
 

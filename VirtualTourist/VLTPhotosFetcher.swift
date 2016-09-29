@@ -10,9 +10,9 @@ import UIKit
 import CoreData
 let FETCHING_PHOTOS_FOR_PIN = "FETCHING FINISHED"
 class VLTPhotosFetcher: NSObject {
-    class func fetchPhotosForPin(pin: Pin, context: NSManagedObjectContext) {
+    class func fetchPhotosForPin(_ pin: Pin, context: NSManagedObjectContext) {
         
-        var pages = pin.totalPages.integerValue
+        var pages = pin.totalPages.intValue
         if pages != 0 {
             pages = Int(arc4random_uniform(UInt32(pages)))
         } else {
@@ -23,27 +23,27 @@ class VLTPhotosFetcher: NSObject {
             var notificationObject = [String: AnyObject]()
             if let error = error {
                 print("Error searching for actors: \(error.localizedDescription)")
-                 notificationObject = ["error": 1,"finished":1]
+                 notificationObject = ["error": 1 as AnyObject,"finished":1 as AnyObject]
                 return
             }
-            if let pages = response?.valueForKey("pages") as? Int {
-                pin.totalPages = pages
+            if let pages = response?.value(forKey: "pages") as? Int {
+                pin.totalPages = NSNumber(value: pages)
             }
-            if let photos = response?.valueForKey("photos")  as? [[String : AnyObject]] {
+            if let photos = response?.value(forKey: "photos")  as? [[String : AnyObject]] {
                 pin.photos = NSSet(array: photos.map() {
                     Photo(dictionary: $0, context: context)
                     })
                 CoreDataStackManager.sharedInstance().saveContext()
                 if photos.count == 0 {
-                    notificationObject = ["error": 1,"finished":1]
+                    notificationObject = ["error": 1 as AnyObject,"finished":1 as AnyObject]
                 } else {
-                    notificationObject = ["error": 0,"finished":1]
+                    notificationObject = ["error": 0 as AnyObject,"finished":1 as AnyObject]
                 }
             } else {
-                    notificationObject = ["error": 1,"finished":1]
+                    notificationObject = ["error": 1 as AnyObject,"finished":1 as AnyObject]
             }
             pin.isPhotosDownloaded = true
-            NSNotificationCenter.defaultCenter().postNotificationName(FETCHING_PHOTOS_FOR_PIN, object: notificationObject)
+            NotificationCenter.default.post(name: Notification.Name(rawValue: FETCHING_PHOTOS_FOR_PIN), object: notificationObject)
 
         }
 
